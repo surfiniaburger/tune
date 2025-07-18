@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: aura-mind
+Version: 0.1.0
+Summary: An offline-first AI assistant for diagnosing crop diseases in Nigeria.
+Author-email: Adedoyinsola Ogungbesan <jdmasciano2@gmail.com>
+Requires-Python: <3.12,>=3.11
+Requires-Dist: mlx
+Requires-Dist: mlx-vlm
+Requires-Dist: numpy
+Requires-Dist: Pillow
+Requires-Dist: huggingface_hub
+Requires-Dist: datasets
+Requires-Dist: tqdm
+Requires-Dist: numba>=0.59.0
+Requires-Dist: llvmlite>=0.42.0
+Provides-Extra: dev
+Requires-Dist: jupyterlab; extra == "dev"
+Requires-Dist: ipykernel; extra == "dev"
+Requires-Dist: matplotlib; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"
