@@ -4,3 +4,6 @@ datasets
 extracted_frames
 downloaded_model
 .venv
+finetuned_model_for_conversion
+ai-edge-torch
+.venv-converter

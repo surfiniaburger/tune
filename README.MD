@@ -1,83 +1,80 @@
-## Aura-Mind: Maize Expert - Project Workflow
+# Aura-Mind: Maize Expert - Project Workflow & Documentation
 
-This document outlines the complete, end-to-end pipeline for training and preparing the "Aura-Mind: Maize Expert" model, a specialized version of Google's Gemma 3N fine-tuned to identify maize plant conditions.
+## Overview
 
-The entire process is conducted using free cloud computing resources (Kaggle/Google Colab) and the Unsloth library for optimized training.
+This document outlines the complete, end-to-end pipeline for creating the **Aura-Mind: Maize Expert**, a specialized multimodal AI model for on-device agricultural diagnostics. The project leverages Google's Gemma 3N architecture, fine-tuned on a custom dataset of Nigerian maize plant conditions.
 
-### Part 1: Data Preparation (Local Machine)
+The workflow is divided into three distinct phases, moving from local data preparation to cloud-based fine-tuning, and finally to a local, controlled conversion for Android deployment.
 
-This phase involves collecting and organizing the image data on your local computer.
+---
 
-**Step 1: Data Collection & Curation**
-Collect images for the target classes. For the Maize MVP, these are:
-*   `maize_healthy`: Images of healthy maize plants, cobs, and leaves in various real-world conditions.
-*   `phosphorus_deficiency`: Images showing the specific symptoms of phosphorus deficiency in maize.
+### **Part 1: Data Curation & Preparation (Local Machine)**
+
+The foundation of a high-quality model is high-quality data. This phase focuses on collecting, organizing, and packaging a focused, real-world dataset.
+
+**Step 1: Data Collection (Maize MVP)**
+For the initial Minimum Viable Product (MVP), the scope was strategically focused on a single, high-impact crop: Maize. Data was collected for two critical classes:
+*   **`maize_healthy`**: A diverse set of images showing healthy maize plants, leaves, and cobs in various market and field conditions in Lagos, Nigeria.
+*   **`phosphorus_deficiency`**: A set of academic images showing the clear visual symptoms of phosphorus deficiency in maize.
 
 **Step 2: Directory Structure**
-Organize the curated images into a clear folder structure. This structure is critical for the automated processing steps later.
+The curated images are organized into a clean, class-per-folder structure, which is essential for automated processing.
 ```
 datasets/
 └── train/
     ├── maize_healthy/
     │   ├── image_01.jpg
-    │   ├── image_02.jpg
     │   └── ...
     └── phosphorus_deficiency/
         ├── image_A.jpg
-        ├── image_B.jpg
         └── ...
 ```
 
-**Step 3: Package the Dataset**
-The entire `datasets/train` directory is compressed into a single `.zip` file for easy uploading to the cloud environment. A helper script is used for this.
+**Step 3: Packaging for the Cloud**
+To ensure data integrity and easy transfer, the entire `datasets/train` directory is compressed into a single archive.
+*   **Script:** `create_zip.py`
+*   **Output:** `maize_dataset.zip`
 
-*   **Command:**
-    ```bash
-    python create_zip.py
-    ```
-*   **Output:** A file named `maize_dataset.zip` (or similar).
+---
 
-### Part 2: Model Fine-Tuning (Kaggle Notebook)
+### **Part 2: Model Fine-Tuning (Kaggle Notebook)**
 
-This phase uses a Kaggle Notebook with a GPU accelerator (T4 x1) to fine-tune the base model.
+This phase uses a Kaggle Notebook with a single GPU accelerator (T4 x1) to leverage the powerful, memory-optimized Unsloth library for fine-tuning.
 
-**Step 1: Setup and Data Upload**
-1.  Create a new Kaggle Notebook with a T4 GPU.
-2.  Install all required libraries (`unsloth`, `triton`, `transformers`, etc.).
-3.  Upload the `maize_dataset.zip` file using the `+ Add Data` UI.
+**Step 1: Environment Setup**
+A Kaggle notebook is initialized, and all required libraries are installed, including `unsloth`, `peft`, `bitsandbytes`, and a specific version of `triton` to ensure compatibility. The `maize_dataset.zip` is uploaded and unzipped.
 
-**Step 2: Load and Prepare Data**
-The notebook unzips the dataset and prepares it in the specific format required by the Unsloth library. Each image is paired with a conversational prompt in a Python list of dictionaries.
+**Step 2: Data Loading & Formatting**
+The unzipped images are loaded and formatted into the specific **Python list of dictionaries** that the Unsloth vision pipeline requires. Each entry contains a PIL Image object and a corresponding conversational prompt. This meticulous data preparation, discovered through extensive debugging, is critical for success.
 
-**Step 3: Load Base Model and Add Adapters**
-The `unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit` model is loaded in 4-bit precision. PEFT LoRA adapters are then applied to the model's vision and language layers, preparing it for fine-tuning.
+**Step 3: Model Loading & LoRA Configuration**
+The `unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit` (2B parameter) model is loaded in 4-bit precision. PEFT LoRA adapters are configured to fine-tune both the `vision_layers` and `language_layers`. A key finding was that `gradient_checkpointing` must be set to `False` for Gemma 3N vision tuning with Unsloth.
 
-**Step 4: Train the Model**
-The model is trained using the `trl.SFTTrainer` configured with Unsloth's specialized `UnslothVisionDataCollator`. Key training parameters:
-*   **`max_steps`**: 400+ (to ensure sufficient learning)
-*   **`learning_rate`**: 1e-4 - 5e-5 (a stable rate for vision tasks)
-*   **`gradient_checkpointing`**: `False` (as required for Gemma 3N vision tuning)
+**Step 4: Training**
+The model is trained using the `trl.SFTTrainer`, but it is configured with Unsloth's specialized **`UnslothVisionDataCollator`**. This custom component handles all on-the-fly data processing and is essential for a successful run. The training loss is monitored, which plummets to near-zero, indicating the model has successfully learned the training data.
 
-The training process is monitored by observing the decrease in the training loss.
+**Step 5: Merge and Push to Hugging Face Hub**
+Upon completion, the trained LoRA adapters are merged into the base model. This final, complete "Maize Expert" model is then pushed to a public Hugging Face Hub repository (`surfiniaburger/AuraMind-Maize-Expert-v1`). This provides a permanent, version-controlled backup and simplifies the next phase by providing a stable, universal access point.
 
-**Step 5: Merge and Push to Hub**
-After training is complete, the trained LoRA adapters are merged into the base model. This final, complete model is then pushed to a public Hugging Face Hub repository for permanent storage and easy access. This is a critical step that solves local loading issues and provides a stable backup.
+---
 
-### Part 3: Model Conversion (New Kaggle/Colab Notebook)
+### **Part 3: Model Conversion to `.task` Format (Local Machine)**
 
-This phase takes the fine-tuned model from the Hub and converts it into the final format required for the Android application.
+This final, highly technical phase converts the trained PyTorch model into a format compatible with the Google AI Edge toolkit for on-device deployment. This is performed on a local Mac to ensure full control over the complex dependency chain, bypassing unresolved conflicts in cloud environments.
 
-**Step 1: Setup Conversion Environment**
-A new notebook is created, and a different set of libraries are installed, including `tensorflow`, `onnx`, `onnx-tf`, and `tflite-support`.
+**Step 1: Create a Dedicated Conversion Environment**
+A new, clean Python virtual environment (`.venv-converter`) is created locally. A precise sequence of installations is performed to ensure library compatibility, including specific versions of `tensorflow`, `protobuf`, and the `ai-edge-torch` library cloned from its repository.
 
-**Step 2: Load Fine-Tuned Model from Hub**
-The merged, fine-tuned model is loaded directly from its Hugging Face repository ID (e.g., `YourUsername/AgroSage-Maize-Expert-v1`). This is a clean and reliable way to access the model.
+**Step 2: Download the Fine-Tuned Model**
+The "Maize Expert" model is downloaded from the Hugging Face Hub into a local directory (`finetuned_model_for_conversion`).
 
-**Step 3: PyTorch -> ONNX Conversion**
-The model is exported from its native PyTorch format into the ONNX (Open Neural Network Exchange) format. This acts as a universal intermediate representation.
+**Step 3: The "Two-Stage" TFLite Conversion**
+Due to the model's multimodal architecture, a direct conversion is not possible. A custom script, `convert_my_model.py`, was developed to perform a two-stage conversion:
+1.  **Vision Encoder:** The `vision_tower` is isolated from the full model. A dummy image input is created, and the `ai_edge_torch.convert` function is used to produce a quantized `vision_encoder_dynamic_int8.tflite` file.
+2.  **Text Decoder:** The language-only weights are loaded into a clean, text-only model structure. The `ai_edge_torch.generative.utilities.converter` is then used to convert this language model into a separate `text_decoder_dynamic_int8.tflite` file.
 
-**Step 4: ONNX -> TensorFlow -> TFLite Conversion**
-The `.onnx` file is converted first into a TensorFlow SavedModel, and then into a quantized TensorFlow Lite (`.tflite`) model. The quantization step (e.g., to INT8) is crucial for reducing the model's size and making it run efficiently on mobile hardware.
+**Step 4: Tokenizer Preparation**
+A separate script from the `ai-edge-torch` library (`tokenizer_to_sentencepiece.py`) is used to extract and format the tokenizer from the Hugging Face repo into the required `tokenizer.model` file.
 
-**Step 5: Package to `.task` Format**
-The final `.tflite` model is packaged with its associated metadata (like the class labels file, `labels.txt`) into a `.task` file using Google AI Edge tools. This `.task` file is the final deliverable, ready to be integrated into the Android application.
+**Step 5: Bundling the Final `.task` File**
+The final step uses the `mediapipe` library's bundler. A custom Python script, `bundle_task_file.py`, combines the generated TFLite models and the `tokenizer.model` into a single, deployable `agro_sage_maize_expert.task` file. This configuration includes critical metadata, such as the `prompt_prefix`, `start_token`, and `stop_tokens`, ensuring the model behaves correctly within the Android app.
