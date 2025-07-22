@@ -1,80 +1,62 @@
-# Aura-Mind: Maize Expert - Project Workflow & Documentation
 
-## Overview
+# Aura-Mind: An AI Field Guide for the Nigerian Farmer
 
-This document outlines the complete, end-to-end pipeline for creating the **Aura-Mind: Maize Expert**, a specialized multimodal AI model for on-device agricultural diagnostics. The project leverages Google's Gemma 3N architecture, fine-tuned on a custom dataset of Nigerian maize plant conditions.
+## The Spark: A Problem I Couldn't Ignore
 
-The workflow is divided into three distinct phases, moving from local data preparation to cloud-based fine-tuning, and finally to a local, controlled conversion for Android deployment.
+This project didn't start in a sterile lab or a corporate boardroom. It started with a memory and a frustration. Growing up in Nigeria, I've always been surrounded by the vibrant, chaotic, and beautiful reality of our local agriculture. I've walked through markets like the one at Boundary, in Apapa, Lagos—a sprawling universe of produce where the hopes of countless farmers are laid out on display. But I've also seen the other side: the quiet desperation in a farmer's eyes when they see their maize leaves yellowing, their tomato plants wilting, their peppers succumbing to a blight they can't name.
 
----
+This isn't a small problem. Agriculture is the backbone of our economy, employing over [**70% of Nigeria's population**](https://www.google.com/search?q=percentage+of+nigerian+population+in+agriculture), yet it's a sector fighting an uphill battle. We face an estimated [**30-40% in crop losses**](https://www.google.com/search?q=crop+losses+in+nigeria+due+to+pests+and+diseases) annually due to pests and diseases. For a smallholder farmer, that's not just a statistic; it's the difference between sending their children to school and another year of struggle. The knowledge to fight back exists, but it's locked away in academic papers and expert manuals, inaccessible to those who need it most, especially in rural areas where the biggest barrier isn't just the cost of data, but the near-total lack of reliable internet connectivity.
 
-### **Part 1: Data Curation & Preparation (Local Machine)**
+The spark for this project came from a paper by Professor T. O. Anjorin from the University of Abuja, which demonstrated the potential of using deep learning to identify local crop diseases. It was a brilliant proof of concept, but it highlighted a gap: how do we take this powerful lab-based technology and put it directly into the hands of a farmer in a remote village, in a way that works offline, speaks their language, and understands their reality?
 
-The foundation of a high-quality model is high-quality data. This phase focuses on collecting, organizing, and packaging a focused, real-world dataset.
+**This became my mission: to build a tool that was personal, private, and powerful enough to run in the palm of a farmer's hand.**
 
-**Step 1: Data Collection (Maize MVP)**
-For the initial Minimum Viable Product (MVP), the scope was strategically focused on a single, high-impact crop: Maize. Data was collected for two critical classes:
-*   **`maize_healthy`**: A diverse set of images showing healthy maize plants, leaves, and cobs in various market and field conditions in Lagos, Nigeria.
-*   **`phosphorus_deficiency`**: A set of academic images showing the clear visual symptoms of phosphorus deficiency in maize.
+## The Proposed Solution: An AI That Lives on the Edge
 
-**Step 2: Directory Structure**
-The curated images are organized into a clean, class-per-folder structure, which is essential for automated processing.
-```
-datasets/
-└── train/
-    ├── maize_healthy/
-    │   ├── image_01.jpg
-    │   └── ...
-    └── phosphorus_deficiency/
-        ├── image_A.jpg
-        └── ...
-```
+I envisioned Agro-Sage: an offline-first, AI-powered companion that could run on a basic Android phone. A farmer could simply take a picture of a struggling plant, and the AI would provide a probable diagnosis and simple, actionable, low-cost advice—no internet required.
 
-**Step 3: Packaging for the Cloud**
-To ensure data integrity and easy transfer, the entire `datasets/train` directory is compressed into a single archive.
-*   **Script:** `create_zip.py`
-*   **Output:** `maize_dataset.zip`
+The launch of Google's Gemma 3N, a powerful multimodal model designed for on-device operation, was the final piece of the puzzle. The technology was finally here. The challenge was to bend it to our will.
 
----
+## The Journey: A Trial by Fire
 
-### **Part 2: Model Fine-Tuning (Kaggle Notebook)**
+The path from idea to a working model has been a brutal, beautiful, and deeply personal fight. It has been a microcosm of the very problem we're trying to solve: a battle against constraints, a search for knowledge, and an absolute refusal to quit.
 
-This phase uses a Kaggle Notebook with a single GPU accelerator (T4 x1) to leverage the powerful, memory-optimized Unsloth library for fine-tuning.
+#### The First Hurdle: Data, The Real Gold
 
-**Step 1: Environment Setup**
-A Kaggle notebook is initialized, and all required libraries are installed, including `unsloth`, `peft`, `bitsandbytes`, and a specific version of `triton` to ensure compatibility. The `maize_dataset.zip` is uploaded and unzipped.
+The academic dataset from Prof. Anjorin's paper was a fantastic starting point, but I quickly realized it wasn't enough. It was clean, academic. I needed the messiness of the real world. I went to the market at Boundary, Apapa, with my phone. I didn't just take pictures of perfect, diseased leaves; I photographed the rejected piles. The bruised tomatoes, the spotted peppers, the maize cobs with their husks half-torn, sitting in wicker baskets under the harsh Lagos sun. I spoke to the sellers, the real experts, and gathered not just images, but context. This project is built on that ground truth.
 
-**Step 2: Data Loading & Formatting**
-The unzipped images are loaded and formatted into the specific **Python list of dictionaries** that the Unsloth vision pipeline requires. Each entry contains a PIL Image object and a corresponding conversational prompt. This meticulous data preparation, discovered through extensive debugging, is critical for success.
+#### The Second Hurdle: The Tools and the "Goliath" of Complexity
 
-**Step 3: Model Loading & LoRA Configuration**
-The `unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit` (2B parameter) model is loaded in 4-bit precision. PEFT LoRA adapters are configured to fine-tune both the `vision_layers` and `language_layers`. A key finding was that `gradient_checkpointing` must be set to `False` for Gemma 3N vision tuning with Unsloth.
+My initial plan was to use Apple's MLX framework on my MacBook. It felt like the perfect "David vs. Goliath" story—building a powerful AI on a personal computer. But the libraries were too new, the dependencies too fragile. It was a dead end.
 
-**Step 4: Training**
-The model is trained using the `trl.SFTTrainer`, but it is configured with Unsloth's specialized **`UnslothVisionDataCollator`**. This custom component handles all on-the-fly data processing and is essential for a successful run. The training loss is monitored, which plummets to near-zero, indicating the model has successfully learned the training data.
+I pivoted to the cloud, using free tiers on Google Colab and Kaggle. This is where the real war began. The next few weeks were a relentless cycle of debugging:
+*   We fought **dependency hell**, with `protobuf` and `tensorflow` versions clashing in the dead of night.
+*   We battled **cryptic hardware errors**, like the infamous `CUDA:1 and cpu` error on Kaggle's multi-GPU machines, a problem that forced us to understand the deep, internal workings of device mapping.
+*   We were mocked by the **"Silent Hang,"** where a training job would run for hours, GPUs blazing at 0%, because of a subtle I/O bottleneck from loading high-resolution images. We solved it by building a robust pre-processing pipeline, only to discover a better way.
 
-**Step 5: Merge and Push to Hugging Face Hub**
-Upon completion, the trained LoRA adapters are merged into the base model. This final, complete "Maize Expert" model is then pushed to a public Hugging Face Hub repository (`surfiniaburger/AuraMind-Maize-Expert-v1`). This provides a permanent, version-controlled backup and simplifies the next phase by providing a stable, universal access point.
+#### The Breakthrough: A Community and a Clue
 
----
+The turning point came from the Unsloth community. After weeks of fighting a broken evaluation pipeline—where our model showed a perfect training loss but a 0% accuracy—I found a Discord discussion. The developers themselves confirmed it: a known architectural quirk in the fine-tuned Gemma 3N meant our evaluation method would never work.
 
-### **Part 3: Model Conversion to `.task` Format (Local Machine)**
+This was a painful, liberating discovery. Our model wasn't broken; our measuring stick was. We pivoted again, armed with the developer's own examples, and rebuilt the training pipeline the "Unsloth Way," using their custom `UnslothVisionDataCollator`.
 
-This final, highly technical phase converts the trained PyTorch model into a format compatible with the Google AI Edge toolkit for on-device deployment. This is performed on a local Mac to ensure full control over the complex dependency chain, bypassing unresolved conflicts in cloud environments.
+The result was a training run that completed **18 epochs in under an hour** on a free Kaggle GPU. The loss curve was a thing of beauty, plummeting from ~13.0 to absolute zero. We had done it. We had a trained, expert model.
 
-**Step 1: Create a Dedicated Conversion Environment**
-A new, clean Python virtual environment (`.venv-converter`) is created locally. A precise sequence of installations is performed to ensure library compatibility, including specific versions of `tensorflow`, `protobuf`, and the `ai-edge-torch` library cloned from its repository.
+## Where We Are Now, and the Fire That Remains
 
-**Step 2: Download the Fine-Tuned Model**
-The "Maize Expert" model is downloaded from the Hugging Face Hub into a local directory (`finetuned_model_for_conversion`).
+Today, I have a powerful, fine-tuned "Maize Expert" model, safely stored on the Hugging Face Hub. I have a proven, robust training pipeline. But the journey is not over.
 
-**Step 3: The "Two-Stage" TFLite Conversion**
-Due to the model's multimodal architecture, a direct conversion is not possible. A custom script, `convert_my_model.py`, was developed to perform a two-stage conversion:
-1.  **Vision Encoder:** The `vision_tower` is isolated from the full model. A dummy image input is created, and the `ai_edge_torch.convert` function is used to produce a quantized `vision_encoder_dynamic_int8.tflite` file.
-2.  **Text Decoder:** The language-only weights are loaded into a clean, text-only model structure. The `ai_edge_torch.generative.utilities.converter` is then used to convert this language model into a separate `text_decoder_dynamic_int8.tflite` file.
+The final hurdle, converting this PyTorch model into the `.task` format for Android, has revealed the final frontier. The official conversion tools, from `ai-edge-torch` to `optimum`, are not yet mature enough to handle this specific, brand-new, fine-tuned multimodal architecture. They fail with deep, unrecoverable errors.
 
-**Step 4: Tokenizer Preparation**
-A separate script from the `ai-edge-torch` library (`tokenizer_to_sentencepiece.py`) is used to extract and format the tokenizer from the Hugging Face repo into the required `tokenizer.model` file.
+It hurts. To be so close to the finish line and be blocked by the very tools meant to get you there is a special kind of frustration.
 
-**Step 5: Bundling the Final `.task` File**
-The final step uses the `mediapipe` library's bundler. A custom Python script, `bundle_task_file.py`, combines the generated TFLite models and the `tokenizer.model` into a single, deployable `agro_sage_maize_expert.task` file. This configuration includes critical metadata, such as the `prompt_prefix`, `start_token`, and `stop_tokens`, ensuring the model behaves correctly within the Android app.
+But it is not a defeat. It is a diagnosis.
+
+This project is no longer just about building an app. It is about stress-testing the entire on-device ecosystem and finding its breaking points. It's about contributing back to the community by documenting this incredibly difficult journey so the next developer doesn't have to fight the same battles.
+
+My passion to see this through has only intensified. The next steps are clear:
+1.  **Showcase the Power:** I will build an interactive Gradio demo to prove the incredible capability of the trained model. This will be the centerpiece of my submission.
+2.  **Engage the Experts:** I will go back to Professor Anjorin, not with an idea, but with a working AI and a story of our struggle. I will re-engage the developers of the conversion tools, not with a bug report, but with a full, reproducible case study.
+3.  **Find a Way:** I will not stop until I find a way to get this model onto a phone. Whether it's waiting for the tools to mature, or diving into the C++ source code of the TensorFlow Lite converter myself, I will find a path.
+
+The problem is too important. The need is too great. And we are too close to give up now. Let's go.
