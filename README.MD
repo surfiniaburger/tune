@@ -13,7 +13,7 @@ The spark for this project came from a paper by Professor T. O. Anjorin from the
 
 ## The Proposed Solution: An AI That Lives on the Edge
 
-I envisioned Agro-Sage: an offline-first, AI-powered companion that could run on a basic Android phone. A farmer could simply take a picture of a struggling plant, and the AI would provide a probable diagnosis and simple, actionable, low-cost advice—no internet required.
+I envisioned Aura-Mind: an offline-first, AI-powered companion that could run on a basic Android phone. A farmer could simply take a picture of a struggling plant, and the AI would provide a probable diagnosis and simple, actionable, low-cost advice—no internet required.
 
 The launch of Google's Gemma 3N, a powerful multimodal model designed for on-device operation, was the final piece of the puzzle. The technology was finally here. The challenge was to bend it to our will.
 
