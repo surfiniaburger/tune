@@ -57,6 +57,6 @@ This project is no longer just about building an app. It is about stress-testing
 My passion to see this through has only intensified. The next steps are clear:
 1.  **Showcase the Power:** I will build an interactive Gradio demo to prove the incredible capability of the trained model. This will be the centerpiece of my submission.
 2.  **Engage the Experts:** I will go back to Professor Anjorin, not with an idea, but with a working AI and a story of our struggle. I will re-engage the developers of the conversion tools, not with a bug report, but with a full, reproducible case study.
-3.  **Find a Way:** I will not stop until I find a way to get this model onto a phone. Whether it's waiting for the tools to mature, or diving into the C++ source code of the TensorFlow Lite converter myself, I will find a path.
+3.  **Find a Way:** (explore alternatives like gguf) I will not stop until I find a way to get this model onto a phone. Whether it's waiting for the tools to mature, or diving into the C++ source code of the TensorFlow Lite converter myself, I will find a path.
 
 The problem is too important. The need is too great. And we are too close to give up now. Let's go.
