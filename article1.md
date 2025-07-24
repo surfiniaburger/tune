@@ -2,7 +2,7 @@
 
 #### **Abstract**
 
-To create a viable on-device AI for Nigerian farmers, our project, Agro-Sage, required a fine-tuning process that was not only effective but also efficient and reproducible on accessible hardware. This report details a comparative study between two distinct fine-tuning strategies for our specialized `Gemma 3N` "Maize Expert" model: a stable **single-GPU baseline** and an advanced **multi-GPU distributed approach**. The findings demonstrate that while multi-GPU training offers a path for future scaling, the single-GPU method provided superior convergence and stability, proving to be the optimal strategy for developing a high-quality, production-ready model for our specific use case.
+To create a viable on-device AI for Nigerian farmers, our project, Aura-Mind, required a fine-tuning process that was not only effective but also efficient and reproducible on accessible hardware. This report details a comparative study between two distinct fine-tuning strategies for our specialized `Gemma 3N` "Maize Expert" model: a stable **single-GPU baseline** and an advanced **multi-GPU distributed approach**. The findings demonstrate that while multi-GPU training offers a path for future scaling, the single-GPU method provided superior convergence and stability, proving to be the optimal strategy for developing a high-quality, production-ready model for our specific use case.
 
 ---
 
