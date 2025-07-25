@@ -7,3 +7,4 @@ downloaded_model
 finetuned_model_for_conversion
 ai-edge-torch
 .venv-converter
+onnx_model
