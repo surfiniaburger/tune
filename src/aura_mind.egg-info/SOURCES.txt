@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 src/aura_mind/__init__.py
 src/aura_mind/data_utils.py

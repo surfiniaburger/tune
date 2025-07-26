@@ -1,8 +1,10 @@
 import torch
 import traceback
+import os
 from pathlib import Path
 from transformers import AutoConfig, AutoModelForCausalLM
 from transformers.configuration_utils import PretrainedConfig
+from optimum.exporters.onnx import onnx_export_from_model
 from optimum.exporters.onnx import main_export
 from optimum.exporters.onnx.config import TextDecoderOnnxConfig
 from optimum.utils import (
@@ -164,20 +166,56 @@ def get_submodels(model: AutoModelForCausalLM) -> Dict[str, AutoModelForCausalLM
 # ==============================================================================
 print("\nStep 2: Preparing and running the ONNX export...")
 try:
+    # --- Pre-load check and fix for empty index files ---
+    # The JSONDecodeError occurs if an empty `model.safetensors.index.json` exists,
+    # as transformers tries to parse it for sharded checkpoints.
+    index_path = Path(pytorch_model_path) / "model.safetensors.index.json"
+    if index_path.exists() and index_path.stat().st_size == 0:
+        print(f"⚠️  Found an empty index file at: {index_path}")
+        print("   This can cause loading errors. Removing it to proceed.")
+        os.remove(index_path)
+        print("   ✅ Empty index file removed.")
+
+    # Leverage GPU if available to reduce CPU memory pressure
+    # --- MPS DEBUGGING ---
+    # The error "Placeholder storage has not been allocated on MPS device!"
+    # indicates a problem with how tensors are being materialized on the Apple
+    # Silicon GPU. As a robust workaround, we will force the export to run
+    # entirely on the CPU. This avoids the MPS backend bug and is often stable
+    # on Macs due to unified memory.
+    device = "cpu"
+    print(f"Using device: {device}")
+
+    # Load the model and config ONCE to have better control over memory.
+    print("Loading model and config from disk...")
     main_config = AutoConfig.from_pretrained(pytorch_model_path, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(
+        pytorch_model_path,
+        config=main_config,
+        trust_remote_code=True,
+    ).to(device)  # Move the model to the GPU immediately
+    print("Model loaded.")
+
     custom_onnx_configs = {
         "decoder_model": CustomGemma3NMultimodalOnnxConfig(config=main_config, task="text-generation", use_past=False),
         "decoder_with_past_model": CustomGemma3NMultimodalOnnxConfig(config=main_config, task="text-generation", use_past=True),
     }
-    main_export(
-        model_name_or_path=pytorch_model_path, output=onnx_output_path, task="text-generation-with-past",
-        trust_remote_code=True,
-        custom_onnx_configs=custom_onnx_configs,
-        fn_get_submodels=get_submodels,
-        opset=14,
-        # Disable validation to prevent out-of-memory (OOM) errors during export.
-        do_validation=False,
-    )
+    # Use the more direct `onnx_export_from_model` which takes a pre-loaded model object.
+    onnx_export_from_model(
+         model=model,
+         output=Path(onnx_output_path),
+         task="text-generation-with-past",
+         custom_onnx_configs=custom_onnx_configs,
+         fn_get_submodels=get_submodels,
+         opset=15,
+         # Disable validation to prevent out-of-memory (OOM) errors during export.
+         do_validation=False,
+         device=device,  # Ensure the exporter uses the GPU
+     )
+    # main_export(
+    #     model_name_or_path=pytorch_model_path, output=onnx_output_path, task="text-generation-with-past",
+    #     trust_remote_code=True, custom_onnx_configs=custom_onnx_configs, fn_get_submodels=get_submodels, opset=14, do_validation=False,
+    # )
     print("\n✅ ONNX conversion process completed successfully!")
     print(f"   The exported model is saved in: {Path(onnx_output_path).resolve()}")
 except Exception:

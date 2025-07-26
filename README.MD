@@ -60,3 +60,100 @@ My passion to see this through has only intensified. The next steps are clear:
 3.  **Find a Way:** (explore alternatives like gguf) I will not stop until I find a way to get this model onto a phone. Whether it's waiting for the tools to mature, or diving into the C++ source code of the TensorFlow Lite converter myself, I will find a path.
 
 The problem is too important. The need is too great. And we are too close to give up now. Let's go.
+
+
+
+
+
+# convert_with_aiedge.py
+import torch
+from transformers import AutoModelForCausalLM, AutoConfig
+from pathlib import Path
+import ai_edge_torch
+# As per the official documentation, use `quant_recipes` for quantization.
+from ai_edge_torch.generative.quantize import quant_recipes
+import traceback
+
+# --- Configuration ---
+PYTORCH_MODEL_PATH = "./finetuned_model_for_conversion"
+TFLITE_OUTPUT_PATH = Path("./aura_mind_maize_expert_aiedge.tflite")
+
+print("🚀 Starting PyTorch to TFLite Conversion with AI Edge Torch...")
+print(f"   - PyTorch Model: {PYTORCH_MODEL_PATH}")
+print(f"   - TFLite Output: {TFLITE_OUTPUT_PATH}")
+
+try:
+    # --- 1. Load PyTorch Model ---
+    print("\n[1/4] Loading PyTorch model...")
+    config = AutoConfig.from_pretrained(PYTORCH_MODEL_PATH, trust_remote_code=True)
+    # Load the model in float32, as this is standard for conversion.
+    model = AutoModelForCausalLM.from_pretrained(
+        PYTORCH_MODEL_PATH,
+        config=config,
+        trust_remote_code=True,
+        torch_dtype=torch.float16,  # Use float16 to reduce memory usage by half
+        low_cpu_mem_usage=True,     # Use less memory during loading
+    ).eval()
+    print("✅ Model loaded.")
+
+    # --- 2. Create Dummy Inputs for Tracing ---
+    print("\n[2/4] Creating dummy inputs for tracing...")
+    # We need to create a sample input that matches the model's forward signature.
+    # This logic is adapted from your previous ONNX export script.
+    batch_size = 1
+    text_seq_len = 16  # A standard length for a dummy prompt
+
+    # Get model-specific dimensions from the config
+    vocab_size = config.text_config.vocab_size
+    # This attribute lives on the main config, not the vision_config sub-object.
+    # It's a common pattern for parameters that bridge the modalities.
+    num_image_tokens = config.vision_soft_tokens_per_image
+    image_token_id = config.image_token_id
+    # The `AttributeError` indicates `num_channels` is not in the vision_config.
+    # This can happen if it wasn't saved during fine-tuning. For standard
+    # image models, this value is almost always 3 (for RGB), so we can safely hardcode it.
+    num_channels = 3
+    # The `AttributeError` indicates `image_size` is also not in the vision_config.
+    # Based on previous scripts and common model architectures, we can safely hardcode this to 768.
+    image_size = 768
+    height = image_size
+    width = image_size
+
+    # a) Create dummy text inputs
+    input_ids = torch.randint(low=3, high=vocab_size, size=(batch_size, text_seq_len), dtype=torch.long)
+    input_ids[:, 0] = config.bos_token_id if hasattr(config, "bos_token_id") else 2
+
+    # b) Inject the special image token placeholder into the text
+    part1 = input_ids[:, :1]
+    part2 = input_ids[:, 1 + num_image_tokens:]
+    image_token_tensor = torch.full((batch_size, num_image_tokens), image_token_id, dtype=torch.long)
+    final_input_ids = torch.cat([part1, image_token_tensor, part2], dim=1)
+    final_attention_mask = torch.ones_like(final_input_ids)
+
+    # c) Create dummy vision inputs
+    pixel_values = torch.randn(batch_size, num_channels, height, width, dtype=torch.float32)
+
+    # d) Assemble the sample inputs tuple in the correct order for the model's forward pass
+    # The signature is forward(self, input_ids, pixel_values, attention_mask, ...)
+    # We pass `None` for the optional `input_features` (audio) argument.
+    sample_inputs = (final_input_ids, pixel_values, None, final_attention_mask)
+    print("✅ Dummy inputs created.")
+
+    # --- 3. Convert, Quantize, and Export to TFLite ---
+    print("\n[3/4] Converting, quantizing, and exporting to TFLite...")
+
+    # The TypeError confirms the previous QuantConfig instantiation was incorrect.
+    # The official, documented way is to use a pre-defined recipe.
+    # `full_int8_dynamic_recipe` provides the settings for dynamic INT8 quantization.
+    quant_config = quant_recipes.full_int8_dynamic_recipe()
+
+    # The `convert` function handles tracing, quantization, and returns an Edge model.
+    edge_model = ai_edge_torch.convert(model, sample_inputs, quant_config=quant_config)
+
+    edge_model.export(TFLITE_OUTPUT_PATH)
+    print(f"\n🎉 SUCCESS! Quantized TFLite model saved to: {TFLITE_OUTPUT_PATH}")
+    print(f"   File size: {TFLITE_OUTPUT_PATH.stat().st_size / 1e6:.2f} MB")
+
+except Exception as e:
+    print(f"\n❌ An error occurred: {e}")
+    traceback.print_exc()
