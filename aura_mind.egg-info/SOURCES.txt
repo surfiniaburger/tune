@@ -1,0 +1,6 @@
+pyproject.toml
+aura_mind.egg-info/PKG-INFO
+aura_mind.egg-info/SOURCES.txt
+aura_mind.egg-info/dependency_links.txt
+aura_mind.egg-info/requires.txt
+aura_mind.egg-info/top_level.txt
