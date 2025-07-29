@@ -5,10 +5,10 @@ from pathlib import Path
 # --- Configuration ---
 
 # The folder we want to zip. This points to your organized training data.
-SOURCE_FOLDER = Path("datasets/train")
+SOURCE_FOLDER = Path("datasets/validation")
 
 # The name of the final zip file we want to create.
-OUTPUT_ZIP_FILE = Path("aura_mind_dataset") # .zip will be added automatically
+OUTPUT_ZIP_FILE = Path("aura_mind_validation_dataset") # .zip will be added automatically
 
 def main():
     """

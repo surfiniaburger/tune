@@ -10,3 +10,4 @@ venv
 .venv
 optimum-executorch
 mediapipe
+aura_mind_validation_dataset.zip
