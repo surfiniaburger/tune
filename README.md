@@ -59,6 +59,8 @@ The answer was a resounding, beautiful yes. As the runs completed, the results f
 
 This was the true breakthrough. The validation wasn't just a number; it was proof. Proof that the data was right, the prompt engineering was right, and the struggle had led to something genuinely powerful. We now had not just one, but a collection of champion models, forged in a crucible of experimentation and validated by empirical data.
 
+---
+
 #### The Third Hurdle: The Wall of Memory and the ONNX Frontier
 
 With a champion model in hand, **proven to be 100% accurate** on a real-world dataset, I faced the final frontier: deploying it to a device that could fit in a farmer's pocket.
@@ -72,6 +74,8 @@ The script was a testament to the engineering required to work at this level. I 
 The terminal simply read: `Killed: 9`.
 
 There was no Python error to debug, no cryptic message to decipher. It was a brutal, final verdict from the macOS kernel. My machine had run out of memory. The process of converting this "on-device" model was too massive to be handled by my on-device hardware. It was a painful irony and a dead end. I had hit a physical wall.
+
+---
 
 #### **The Final Hurdle: The On-Device Frontier**
 
@@ -87,6 +91,7 @@ This began a multi-day odyssey, a trial by fire that revealed the immense comple
 
 After an epic struggle involving over 4,600 compilation steps, the build succeeded. I had a custom version of MediaPipe, modified with my own two hands to recognize the Gemma 3N model. The path was clear. I wrote the final conversion script, pointing it to my fine-tuned model and my custom build of the framework. The last wall was about to fall.
 
+---
 
 ## Where We Are Now: At the Edge of the Final Frontier
 
