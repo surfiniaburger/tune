@@ -1,12 +1,16 @@
 mlx
+mlx-audio
 mlx-vlm
 numpy
 Pillow
-huggingface_hub
+huggingface-hub>=0.20.0
+filelock>=3.13.0
 datasets
 tqdm
 transformers
 kaggle
+streamlit
+gradio
 numba>=0.59.0
 llvmlite>=0.42.0
 

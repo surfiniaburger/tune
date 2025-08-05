@@ -1,0 +1,23 @@
+
+{
+  "healthy_maize": {
+    "title": "Your Maize is Looking Good!",
+    "recommendations": [
+      "Your maize is flourishing! Keep up the great work.",
+      "This plant is a testament to your excellent farming skills. Abeg, continue wetin you dey do, e dey work!",
+      "Na fine maize be this! The gods of the harvest are smiling upon you.",
+      "This maize is so healthy, it could probably run a marathon. Keep it up!",
+      "Your crop is looking sharp, my friend. Continue to dey give am tender loving care."
+    ]
+  },
+  "phosphorus_deficiency": {
+    "title": "Phosphorus Deficiency Detected",
+    "recommendations": [
+      "Your maize is showing signs of phosphorus deficiency. Here are some remedies:",
+      "Apply a phosphorus-rich fertilizer. Look for fertilizers with a high middle number (P) in the N-P-K ratio.",
+      "Incorporate bone meal or rock phosphate into the soil. These are excellent organic sources of phosphorus.",
+      "Ensure your soil pH is between 6.0 and 7.0. Phosphorus is most available to plants in this range.",
+      "Compost and manure can also help to increase phosphorus levels in the soil over time."
+    ]
+  }
+}
