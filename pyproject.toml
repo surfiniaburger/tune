@@ -13,7 +13,6 @@ requires-python = ">=3.11, <3.12" # Let's lock this in for stability
 # --- Core Dependencies for Running the Application ---
 dependencies = [
     "mlx",
-    "mlx-audio",
     "mlx-vlm",         # The key library for Vision-Language Models in MLX
     "numpy",           # For numerical operations
     "Pillow",          # For image loading and transformations

@@ -262,6 +262,7 @@ dependencies = [
     { name = "llvmlite" },
     { name = "mlx" },
     { name = "mlx-audio" },
+    { name = "mlx-lm" },
     { name = "mlx-vlm" },
     { name = "numba" },
     { name = "numpy" },
@@ -293,7 +294,8 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'dev'" },
     { name = "mlx" },
     { name = "mlx-audio" },
-    { name = "mlx-vlm" },
+    { name = "mlx-lm", specifier = "<=0.24.1" },
+    { name = "mlx-vlm", specifier = "<=0.1.26" },
     { name = "numba", specifier = ">=0.59.0" },
     { name = "numpy" },
     { name = "pillow" },
@@ -1885,7 +1887,7 @@ wheels = [
 
 [[package]]
 name = "mlx-lm"
-version = "0.26.0"
+version = "0.24.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
@@ -1893,36 +1895,33 @@ dependencies = [
     { name = "numpy" },
     { name = "protobuf" },
     { name = "pyyaml" },
-    { name = "transformers" },
+    { name = "transformers", extra = ["sentencepiece"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/aa/a2f02e67736a2bf57acefb3a1a342005586f1be8d7b2fb37ca5f3d4f3049/mlx_lm-0.26.0.tar.gz", hash = "sha256:78980ad994baf976779cc1c34c0d55c1c6b63dffef4899d67fec240d0c443b52", size = 159064, upload-time = "2025-07-08T20:21:31.393Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f0/9a/1691d79ace5b262f962606b03a7a6a85381a934070d6dcaba579f39f6b41/mlx_lm-0.24.1.tar.gz", hash = "sha256:5df8aa87504df28bd77c91be09f68c551bde6f141f204d3b37157f3c3ede26c1", size = 145454, upload-time = "2025-05-14T13:19:35.341Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/e7/d0e576397b61bf90a0bb27819443f723258acd8dd1207684fdef29243ce4/mlx_lm-0.26.0-py3-none-any.whl", hash = "sha256:b00294c26242cd50db4b6e3ec3a2baf1cfdf8ca49a5e6057dce14642fabe0d21", size = 217671, upload-time = "2025-07-08T20:21:29.448Z" },
+    { url = "https://files.pythonhosted.org/packages/65/40/79736c276c6667f1d0beddf2a3e9a56b5ae522baeb838de9dcbeacdf13be/mlx_lm-0.24.1-py3-none-any.whl", hash = "sha256:8a47c2ac73b1ea5f1f4569d48420b4cd2fdb38972eb14fd45340c3341bf0689f", size = 194614, upload-time = "2025-05-14T13:19:34.113Z" },
 ]
 
 [[package]]
 name = "mlx-vlm"
-version = "0.3.1"
+version = "0.1.26"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "datasets" },
     { name = "fastapi" },
     { name = "gradio" },
     { name = "mlx" },
-    { name = "mlx-audio" },
     { name = "mlx-lm" },
     { name = "numpy" },
     { name = "opencv-python" },
     { name = "pillow" },
     { name = "requests" },
-    { name = "scipy" },
-    { name = "soundfile" },
     { name = "tqdm" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/c2/f8a664ba84159bdf4ee89511ffe603e3a98fd2e50fabb3b4d01829246793/mlx_vlm-0.3.1.tar.gz", hash = "sha256:10044d5d3ab9bbb0bf0f4cd836a39fd8751bac44452a2a6735dc98925fd228fb", size = 227297, upload-time = "2025-07-12T16:21:31.72Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/8f/ffb8fb9dde21ec0172d22318dfe1043c9cb458c29dc00bc3be72d5de7535/mlx_vlm-0.1.26.tar.gz", hash = "sha256:a542eb3651a406894e5254fefab6c348a6cbe8bbb382b16b65d7a81666c9430b", size = 190818, upload-time = "2025-05-13T20:46:27.899Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/ff/7a24cb5a70482113f752ffa89b942d1c7e3710c99aa7eeebd6d4d0d34f7a/mlx_vlm-0.3.1-py3-none-any.whl", hash = "sha256:9de5063149192f4801c2349d63a2949090d989d79aa72821f42afaae9d775f07", size = 282925, upload-time = "2025-07-12T16:21:30.101Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/0a/044fba843ae02bf2750c9a3540aabae1c136883cd4020513832751406f55/mlx_vlm-0.1.26-py3-none-any.whl", hash = "sha256:732a058f256c3245566d72544f02f0f3bf5af1aa6b47fcd5521735a2cd05aee2", size = 246020, upload-time = "2025-05-13T20:46:26.792Z" },
 ]
 
 [[package]]
@@ -3729,6 +3728,12 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4c/67/80f51466ec447028fd84469b208eb742533ce06cc8fad2e3181380199e5c/transformers-4.53.2.tar.gz", hash = "sha256:6c3ed95edfb1cba71c4245758f1b4878c93bf8cde77d076307dacb2cbbd72be2", size = 9201233, upload-time = "2025-07-11T12:39:08.742Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/88/beb33a79a382fcd2aed0be5222bdc47f41e4bfe7aaa90ae1374f1d8ea2af/transformers-4.53.2-py3-none-any.whl", hash = "sha256:db8f4819bb34f000029c73c3c557e7d06fc1b8e612ec142eecdae3947a9c78bf", size = 10826609, upload-time = "2025-07-11T12:39:05.461Z" },
+]
+
+[package.optional-dependencies]
+sentencepiece = [
+    { name = "protobuf" },
+    { name = "sentencepiece" },
 ]
 
 [[package]]
