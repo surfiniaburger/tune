@@ -1,0 +1,5 @@
+mlx-audio
+mlx-lm<=0.24.1
+numpy
+soundfile
+scipy
