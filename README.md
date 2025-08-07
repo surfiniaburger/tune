@@ -96,3 +96,9 @@ My passion to see this through has only been strengthened by this battle. The ne
 3.  **Expand the Mission:** With a proven model and a robust training pipeline, we will begin training new expert models for other critical Nigerian crops like cassava and tomatoes.
 
 The problem is too important, the need is too great, and after this journey, we have a proven, data-driven solution in our hands. We are at the final frontier, and we will find a way through. **Let's go.**
+
+
+
+
+## INFERENCE
+For a guide on running inference please refer to the README in tts_service directory.
