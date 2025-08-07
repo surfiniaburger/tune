@@ -97,8 +97,63 @@ My passion to see this through has only been strengthened by this battle. The ne
 
 The problem is too important, the need is too great, and after this journey, we have a proven, data-driven solution in our hands. We are at the final frontier, and we will find a way through. **Let's go.**
 
+---
 
+### Running the Aura-Mind Application
 
+This project uses a two-part environment to manage conflicting dependencies between the main visual-language model and the text-to-speech (TTS) service. Follow these steps to set up and run the application.
 
-## INFERENCE
-For a guide on running inference please refer to the README in tts_service directory.
+**Prerequisites:**
+*   Python 3.11
+*   `uv` (or `pip`) for package installation
+
+**Step 1: Set Up the Main Application Environment**
+
+This environment runs the Streamlit UI and the main multimodal model.
+
+```bash
+# Create and activate the main virtual environment
+python3.11 -m venv .venv
+source .venv/bin/activate
+
+# Install the required packages
+uv pip install -r requirements.txt
+```
+
+**Step 2: Set Up the Text-to-Speech (TTS) Service Environment**
+
+This is a separate, isolated environment dedicated to the TTS model.
+
+```bash
+# Create and activate the TTS virtual environment inside the tts_service directory
+python3.11 -m venv tts_service/.venv_tts
+source tts_service/.venv_tts/bin/activate
+
+# Install the TTS requirements
+uv pip install -r tts_service/requirements.txt
+
+# Deactivate when done
+deactivate
+```
+
+**Step 3: Download the Required Models**
+
+The application requires two models: the fine-tuned maize expert model and the Pidgin English TTS model.
+
+1.  **Maize Expert Model:** Ensure the `finetuned_model_for_conversion` directory exists and contains your fine-tuned model files.
+2.  **TTS Model:** Download the `orpheus-3b-pidgin-voice-v1` model and place it in the root directory of the project. You can download it from the Hugging Face Hub.
+
+**Step 4: Run the Application**
+
+Once both environments are set up and the models are in place, you can run the Streamlit application.
+
+```bash
+# Make sure you are in the main environment
+source .venv/bin/activate
+
+# Run the Streamlit app
+streamlit run aura.py
+```
+
+The application should now open in your web browser. You can upload an image of a maize plant to get a diagnosis and hear the result spoken in Pidgin English.
+
