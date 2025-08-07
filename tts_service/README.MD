@@ -29,7 +29,7 @@ The `aura.py` script runs a Streamlit application that provides a voice-based as
 ### Prerequisites
 
 - Ensure you have followed the setup instructions in this README to create the `tts_service` environment.
-- Make sure you have the necessary models downloaded.
+- Make sure you have the necessary models downloaded. **https://huggingface.co/surfiniaburger** (pick tts and expert model here)
 
 ### Usage
 
