@@ -1,9 +1,17 @@
 import streamlit as st
 import os
+import pandas as pd
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import subprocess
 import numpy
+
+# --- Performance Tracking Setup ---
+# Initialize session state for storing performance metrics if it doesn't exist.
+if 'vlm_performance_data' not in st.session_state:
+    st.session_state.vlm_performance_data = []
+if 'tts_performance_data' not in st.session_state:
+    st.session_state.tts_performance_data = []
 
 # Audio input
 audio_file = st.audio_input("Record your audio message")
@@ -55,6 +63,17 @@ if st.button("Run Model") and audio_path and image_path:
             max_tokens=20,
             verbose=True
         )
+
+        # --- Capture VLM Performance ---
+        vlm_stats = {
+            "Prompt Tokens": output.prompt_tokens,
+            "Generation Tokens": output.generation_tokens,
+            "Prompt TPS": output.prompt_tps,
+            "Generation TPS": output.generation_tps,
+            "Peak Memory (GB)": output.peak_memory
+        }
+        st.session_state.vlm_performance_data.append(vlm_stats)
+
 
         st.markdown("### Model Output")
         st.write(output.text)
@@ -135,6 +154,20 @@ if st.button("Run Model") and audio_path and image_path:
                 with st.spinner("Generating speech..."):
                     result = subprocess.run(command, capture_output=True, text=True, check=False)
 
+                # --- Capture TTS Performance ---
+                # Extract performance metrics from the TTS script's stdout.
+                tts_log = result.stdout
+                if tts_log:
+                    try:
+                        # Example of parsing: "Generation Speed: 123.45 tokens/sec"
+                        speed_line = [line for line in tts_log.split('\n') if "Generation Speed" in line]
+                        if speed_line:
+                            tts_speed = float(speed_line[0].split(':')[1].strip().split()[0])
+                            st.session_state.tts_performance_data.append({"Generation Speed (tokens/sec)": tts_speed})
+                    except (IndexError, ValueError) as e:
+                        st.warning(f"Could not parse TTS performance data: {e}")
+
+
                 if result.returncode == 0:
                     # The TTS script appends `_000` to the filename. We need to account for that.
                     base, ext = os.path.splitext(speech_output_path)
@@ -168,3 +201,28 @@ if st.button("Run Model") and audio_path and image_path:
         st.error(f"An error occurred: {e}")
 else:
     st.info("Please record audio and provide an image to run the model.")
+
+# --- Performance Dashboard ---
+st.sidebar.title("On-Device Performance Dashboard")
+
+if st.session_state.vlm_performance_data:
+    st.sidebar.markdown("### Vision & Language Model (VLM) Performance")
+    vlm_df = pd.DataFrame(st.session_state.vlm_performance_data)
+    st.sidebar.dataframe(vlm_df)
+    
+    st.sidebar.markdown("**VLM Performance Over Time**")
+    st.sidebar.line_chart(vlm_df[["Prompt TPS", "Generation TPS"]])
+    st.sidebar.line_chart(vlm_df[["Peak Memory (GB)"]])
+
+if st.session_state.tts_performance_data:
+    st.sidebar.markdown("### Text-to-Speech (TTS) Performance")
+    tts_df = pd.DataFrame(st.session_state.tts_performance_data)
+    st.sidebar.dataframe(tts_df)
+
+    st.sidebar.markdown("**TTS Performance Over Time**")
+    st.sidebar.line_chart(tts_df)
+
+if st.sidebar.button("Clear Performance Data"):
+    st.session_state.vlm_performance_data = []
+    st.session_state.tts_performance_data = []
+    st.rerun()
