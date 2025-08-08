@@ -140,7 +140,8 @@ deactivate
 
 The application requires two models: the fine-tuned maize expert model and the Pidgin English TTS model.
 
-1.  **Maize Expert Model:** Ensure the `finetuned_model_for_conversion` directory exists and contains your fine-tuned model files.
+1.  **Maize Expert Model:** Ensure the `finetuned_model_for_conversion` directory exists and contains your fine-tuned model files. You can dowload it from Hugging Face (`surfiniaburger/AuraMind-Maize-Expert-E2B-Finetuned`).
+
 2.  **TTS Model:** Download the `orpheus-3b-pidgin-voice-v1` model and place it in the root directory of the project. You can download it from the Hugging Face Hub.
 
 **Step 4: Run the Application**
