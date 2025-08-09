@@ -28,6 +28,8 @@ dependencies = [
     # --- VERSION OVERRIDES TO FIX INSTALLATION ---
     "numba>=0.59.0",
     "llvmlite>=0.42.0",
+    "faiss-cpu",
+    "sentence-transformers",
 ]
 
 # --- NEW SECTION TO ADD ---

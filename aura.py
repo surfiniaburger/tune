@@ -78,35 +78,45 @@ if st.button("Run Model") and audio_path and image_path:
         st.markdown("### Model Output")
         st.write(output.text)
 
-        # --- RAG and TTS Preparation ---
-        # Based on the classification, retrieve and display relevant information.
-        # A summary is prepared for TTS to keep the audio concise.
+        # --- Semantic Search and TTS Preparation ---
+        import faiss
+        from sentence_transformers import SentenceTransformer
+
+        def search(query, model_name='all-MiniLM-L6-v2', index_path='faiss_index.bin', data_path='documents.npy', k=1):
+            """Searches the FAISS index for the most similar documents to a query."""
+            model = SentenceTransformer(model_name)
+            index = faiss.read_index(index_path)
+            documents = np.load(data_path, allow_pickle=True)
+            
+            query_embedding = model.encode([query], convert_to_tensor=False)
+            distances, indices = index.search(np.array(query_embedding, dtype=np.float32), k)
+            
+            results = []
+            for i, idx in enumerate(indices[0]):
+                if idx != -1:
+                    results.append({
+                        'distance': distances[0][i],
+                        'document': documents[idx]
+                    })
+            return results
+
+        query = output.text.strip()
+        search_results = search(query)
+
         rag_text_for_display = None
-        tts_text = output.text  # Default to VLM output if no remedy is found
+        tts_text = query  # Default to VLM output if no remedy is found
 
-        classification_result = output.text.strip()
-        remedy_file_path = None
-
-        if "Healthy Maize Plant" in classification_result:
-            remedy_file_path = "healthy_maize_remedy.txt"
-        elif "Maize Phosphorus Deficiency" in classification_result:
-            remedy_file_path = "maize_phosphorus_deficiency_remedy.txt"
-        else:
-            remedy_file_path = "comic_relief.txt"
-
-        if remedy_file_path:
+        if search_results:
             st.markdown("### Recommended Actions")
-            try:
-                with open(remedy_file_path, 'r', encoding='utf-8') as f:
-                    rag_text_for_display = f.read()
+            rag_text_for_display = search_results[0]['document']
+            
+            # For TTS, use the first two paragraphs as a summary.
+            paragraphs = rag_text_for_display.split('\n\n')
+            tts_text = "\n\n".join(paragraphs[:2])
 
-                # For TTS, use the first two paragraphs as a summary.
-                paragraphs = rag_text_for_display.split('\n\n')
-                tts_text = "\n\n".join(paragraphs[:2])
-
-                st.markdown(rag_text_for_display)
-            except FileNotFoundError:
-                st.warning(f"Remedy file not found: {remedy_file_path}")
+            st.markdown(rag_text_for_display)
+        else:
+            st.warning("No relevant information found.")
 
         # --- Memory Cleanup ---
         # Explicitly delete the large vision model and processor to free up
