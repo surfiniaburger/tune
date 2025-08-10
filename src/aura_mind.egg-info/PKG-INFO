@@ -18,6 +18,8 @@ Requires-Dist: streamlit
 Requires-Dist: gradio
 Requires-Dist: numba>=0.59.0
 Requires-Dist: llvmlite>=0.42.0
+Requires-Dist: faiss-cpu
+Requires-Dist: sentence-transformers
 Provides-Extra: dev
 Requires-Dist: jupyterlab; extra == "dev"
 Requires-Dist: ipykernel; extra == "dev"
