@@ -4,7 +4,7 @@ import pandas as pd
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import subprocess
-import numpy
+import numpy as np
 
 # --- Performance Tracking Setup ---
 # Initialize session state for storing performance metrics if it doesn't exist.

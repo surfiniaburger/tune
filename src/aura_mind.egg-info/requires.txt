@@ -1,5 +1,7 @@
-mlx
-mlx-vlm
+mlx-vlm>=0.3.2
+mlx>=0.28.0
+mlx-lm>=0.26.3
+mlx-metal>=0.28.0
 numpy
 Pillow
 huggingface-hub>=0.20.0
@@ -10,6 +12,7 @@ transformers
 kaggle
 streamlit
 gradio
+sentence-transformers
 numba>=0.59.0
 llvmlite>=0.42.0
 faiss-cpu
