@@ -12,8 +12,10 @@ requires-python = ">=3.11, <3.12" # Let's lock this in for stability
 
 # --- Core Dependencies for Running the Application ---
 dependencies = [
-    "mlx",
-    "mlx-vlm",         # The key library for Vision-Language Models in MLX
+    "mlx-vlm>=0.3.2",          # The key library for Vision-Language Models in MLX
+    "mlx>=0.28.0",
+    "mlx-lm>=0.26.3",
+    "mlx-metal>=0.28.0",
     "numpy",           # For numerical operations
     "Pillow",          # For image loading and transformations
     "huggingface-hub>=0.20.0", # To download models from the Hub
@@ -24,6 +26,7 @@ dependencies = [
     "kaggle",
     "streamlit",
     "gradio",
+    "sentence-transformers",
 
     # --- VERSION OVERRIDES TO FIX INSTALLATION ---
     "numba>=0.59.0",

@@ -4,8 +4,10 @@ Version: 0.1.0
 Summary: An offline-first AI assistant for diagnosing crop diseases in Nigeria.
 Author-email: Adedoyinsola Ogungbesan <jdmasciano2@gmail.com>
 Requires-Python: <3.12,>=3.11
-Requires-Dist: mlx
-Requires-Dist: mlx-vlm
+Requires-Dist: mlx-vlm>=0.3.2
+Requires-Dist: mlx>=0.28.0
+Requires-Dist: mlx-lm>=0.26.3
+Requires-Dist: mlx-metal>=0.28.0
 Requires-Dist: numpy
 Requires-Dist: Pillow
 Requires-Dist: huggingface-hub>=0.20.0
@@ -16,6 +18,7 @@ Requires-Dist: transformers
 Requires-Dist: kaggle
 Requires-Dist: streamlit
 Requires-Dist: gradio
+Requires-Dist: sentence-transformers
 Requires-Dist: numba>=0.59.0
 Requires-Dist: llvmlite>=0.42.0
 Requires-Dist: faiss-cpu
