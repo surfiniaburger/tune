@@ -6,6 +6,31 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import subprocess
 import numpy as np
 
+from database import check_if_indexed
+from create_index import create_index as build_secure_index
+from search import search as secure_search
+import streamlit as st
+
+st.title("Aura-Mind: Your Offline AI Farming Companion")
+
+# Check if the index exists. If not, offer to build it.
+if not check_if_indexed():
+    st.warning("Local knowledge base not found.")
+    if st.button("Build Local Knowledge Base"):
+        document_files = ["healthy_maize_remedy.txt", "maize_phosphorus_deficiency_remedy.txt", "comic_relief.txt"]
+        documents_content = []
+        for file_path in document_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    documents_content.append(f.read())
+            except FileNotFoundError:
+                st.error(f"Required file not found: {file_path}")
+        
+        with st.spinner("Building secure index... This may take a moment."):
+            build_secure_index(documents_content)
+        st.success("Secure knowledge base built successfully!")
+        st.rerun()
+
 # --- Performance Tracking Setup ---
 # Initialize session state for storing performance metrics if it doesn't exist.
 if 'vlm_performance_data' not in st.session_state:
@@ -75,33 +100,11 @@ if st.button("Run Model") and audio_path and image_path:
         st.session_state.vlm_performance_data.append(vlm_stats)
 
 
-        st.markdown("### Model Output")
+        st.markdown("### Diagnosis")
         st.write(output.text)
 
-        # --- Semantic Search and TTS Preparation ---
-        import faiss
-        from sentence_transformers import SentenceTransformer
-
-        def search(query, model_name='all-MiniLM-L6-v2', index_path='faiss_index.bin', data_path='documents.npy', k=1):
-            """Searches the FAISS index for the most similar documents to a query."""
-            model = SentenceTransformer(model_name)
-            index = faiss.read_index(index_path)
-            documents = np.load(data_path, allow_pickle=True)
-            
-            query_embedding = model.encode([query], convert_to_tensor=False)
-            distances, indices = index.search(np.array(query_embedding, dtype=np.float32), k)
-            
-            results = []
-            for i, idx in enumerate(indices[0]):
-                if idx != -1:
-                    results.append({
-                        'distance': distances[0][i],
-                        'document': documents[idx]
-                    })
-            return results
-
         query = output.text.strip()
-        search_results = search(query)
+        search_results = secure_search(query)
 
         rag_text_for_display = None
         tts_text = query  # Default to VLM output if no remedy is found

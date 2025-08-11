@@ -158,3 +158,5 @@ streamlit run aura.py
 
 The application should now open in your web browser. You can upload an image of a maize plant to get a diagnosis and hear the result spoken in Pidgin English.
 
+
+python run_tts_service.py --text "Hello, this is a test." --model-path ../orpheus-3b-pidgin-voice-v1

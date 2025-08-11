@@ -16,6 +16,7 @@ dependencies = [
     "mlx>=0.28.0",
     "mlx-lm>=0.26.3",
     "mlx-metal>=0.28.0",
+    "cryptography",
     "numpy",           # For numerical operations
     "Pillow",          # For image loading and transformations
     "huggingface-hub>=0.20.0", # To download models from the Hub

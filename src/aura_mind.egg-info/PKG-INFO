@@ -8,6 +8,7 @@ Requires-Dist: mlx-vlm>=0.3.2
 Requires-Dist: mlx>=0.28.0
 Requires-Dist: mlx-lm>=0.26.3
 Requires-Dist: mlx-metal>=0.28.0
+Requires-Dist: cryptography
 Requires-Dist: numpy
 Requires-Dist: Pillow
 Requires-Dist: huggingface-hub>=0.20.0
