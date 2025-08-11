@@ -20,6 +20,8 @@ To build a RAG system worthy of our mission, we needed a new blueprint. We found
 
 Our implementation is a ground-up rethinking of what a RAG system can be in an offline, mobile-first context. It is a multi-stage process where security is the default at every step.
 
+![AuraMind Castle](/rag.png)
+
 1.  **The Foundation: Encrypted at Inception.** When we build our knowledge base, the process begins and ends with encryption. We take our plain-text remedy documents, split them into logical chunks, and immediately encrypt each chunk using **AES-256**, a robust, military-grade encryption standard. These encrypted binary blobs are then stored in a local **SQLite** database on the device. At no point does unencrypted text touch the device's permanent storage.
 
 2.  **The Search: A Two-Part Handshake.** When the AI provides a query like "Healthy Maize Plant," our RAG system initiates a secure, two-part search:
