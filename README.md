@@ -160,3 +160,12 @@ The application should now open in your web browser. You can upload an image of 
 
 
 python run_tts_service.py --text "Hello, this is a test." --model-path ../orpheus-3b-pidgin-voice-v1
+
+
+
+docker build -t aura-mind-app .
+
+docker run -p 8501:8501 aura-mind-app
+
+
+docker builder prune -f && docker build --no-cache -t tune .

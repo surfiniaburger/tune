@@ -26,8 +26,11 @@ dependencies = [
     "transformers",
     "kaggle",
     "streamlit",
+    "protobuf==3.20.3",
+    "blinker==1.8.2",
     "gradio",
     "sentence-transformers",
+    "PyMuPDF",
 
     # --- VERSION OVERRIDES TO FIX INSTALLATION ---
     "numba>=0.59.0",

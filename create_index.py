@@ -1,65 +1,69 @@
+
+# create_index.py
+
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
-import re
-import pickle
+import os
 
-# Import our new modules
-from database import init_db, get_db_connection, INDEX_FILE, DB_FILE
+from database import init_db, get_db_connection, INDEX_FILE, DB_FILE, delete_database_and_index
 from security import encrypt_data
 
-def get_text_chunks(text, max_chunk_size=1024):
-    """Splits text into chunks."""
-    sentences = re.split(r'(?<=[.!?]) +', text)
-    chunks = []
-    current_chunk = ""
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) + 1 < max_chunk_size:
-            current_chunk += sentence + " "
-        else:
-            chunks.append(current_chunk.strip())
-            current_chunk = sentence + " "
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    return chunks
+# Use a CLIP model that can handle both text and images
+MODEL_NAME = 'clip-ViT-B-32'
 
-def create_index(documents, model_name='all-MiniLM-L6-v2'):
-    """Creates an encrypted, persistent index for a list of documents."""
+def create_initial_index(documents_dict):
+    """
+    Creates an initial encrypted, persistent index from a dictionary of text documents.
+    This will delete any existing database to ensure a clean start.
+    """
+    print("Performing a clean rebuild of the knowledge base...")
+    delete_database_and_index()
     init_db()
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    model = SentenceTransformer(model_name)
+    model = SentenceTransformer(MODEL_NAME)
 
     all_chunks = []
-    for doc in documents:
-        all_chunks.extend(get_text_chunks(doc))
+    all_embeddings = []
 
-    embeddings = model.encode(all_chunks, convert_to_tensor=False)
-    
-    # Store encrypted chunks and embeddings
-    for chunk, embedding in zip(all_chunks, embeddings):
-        encrypted_chunk = encrypt_data(chunk.encode('utf-8'))
+    for name, content in documents_dict.items():
+        # Add document to documents table
+        cursor.execute("INSERT INTO documents (name) VALUES (?)", (name,))
+        doc_id = cursor.lastrowid
+
+        # For initial docs, we treat the whole content as one chunk
+        chunk_text = content
+        all_chunks.append((doc_id, 'text', encrypt_data(chunk_text.encode('utf-8')), 1))
         
-        # We need to serialize the numpy array to bytes before encryption
-        embedding_bytes = pickle.dumps(embedding)
-        encrypted_embedding = encrypt_data(embedding_bytes)
-        
-        cursor.execute(
-            "INSERT INTO documents (encrypted_chunk, encrypted_embedding) VALUES (?, ?)",
-            (encrypted_chunk, encrypted_embedding)
-        )
-    
+        # Create text embedding
+        text_embedding = model.encode([chunk_text])
+        all_embeddings.append(text_embedding)
+
+    # Batch insert chunks
+    cursor.executemany(
+        "INSERT INTO chunks (doc_id, content_type, encrypted_content, page_num) VALUES (?, ?, ?, ?)",
+        all_chunks
+    )
     conn.commit()
     conn.close()
 
+    if not all_embeddings:
+        print("No content to index.")
+        return
+
     # Create and save the FAISS index
-    dimension = embeddings.shape[1]
+    embeddings_np = np.vstack(all_embeddings).astype('float32')
+    dimension = embeddings_np.shape[1]
     index = faiss.IndexFlatL2(dimension)
-    index.add(np.array(embeddings, dtype=np.float32))
+    index.add(embeddings_np)
     faiss.write_index(index, INDEX_FILE)
 
-    print(f"Encrypted index created with {len(all_chunks)} chunks.")
+    print(f"Initial encrypted index created with {len(all_chunks)} chunks.")
     print(f"Database: {DB_FILE}, FAISS Index: {INDEX_FILE}")
+
+
 
 if __name__ == '__main__':
     document_files = ["healthy_maize_remedy.txt", "maize_phosphorus_deficiency_remedy.txt", "comic_relief.txt"]
@@ -70,5 +74,5 @@ if __name__ == '__main__':
                 documents_content.append(f.read())
         except FileNotFoundError:
             print(f"Warning: File not found, skipping: {file_path}")
-            
-    create_index(documents_content)
+
+    create_initial_index(documents_content)

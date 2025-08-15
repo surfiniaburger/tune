@@ -12,8 +12,11 @@ tqdm
 transformers
 kaggle
 streamlit
+protobuf==3.20.3
+blinker==1.8.2
 gradio
 sentence-transformers
+PyMuPDF
 numba>=0.59.0
 llvmlite>=0.42.0
 faiss-cpu
