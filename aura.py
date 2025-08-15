@@ -7,15 +7,45 @@ import subprocess
 import numpy as np
 
 from database import check_if_indexed
-from create_index import create_index as build_secure_index
+from create_index import create_initial_index as build_secure_index
 from search import search as secure_search
+from ingest_document import ingest_pdf
 import streamlit as st
 
 st.title("Aura-Mind: Your Offline AI Farming Companion")
 
+# --- Knowledge Base Management ---
+with st.sidebar:
+    st.header("Knowledge Base")
+    if st.button("Rebuild Initial Knowledge Base"):
+        with st.spinner("Deleting old base and building new one..."):
+            docs = {
+                "Healthy Maize Plant": "For a Healthy Maize Plant, ensure proper watering and sunlight. No special remedy is needed. Continue good farming practices.",
+                "Maize Phosphorus Deficiency": "Phosphorus deficiency in maize is characterized by stunted growth and purplish discoloration of leaves. To remedy this, apply a phosphorus-rich fertilizer like DAP (Di-Ammonium Phosphate) or bone meal to the soil. Follow package instructions for application rates."
+            }
+            create_initial_index(docs)
+        st.success("Initial knowledge base rebuilt!")
+    
+    st.markdown("---")
+    st.subheader("Add Your Own Knowledge")
+    uploaded_pdf = st.file_uploader("Upload a PDF document", type="pdf")
+    if uploaded_pdf is not None:
+        # Save the uploaded file temporarily to pass its path
+        temp_file_path = os.path.join(".", uploaded_pdf.name)
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_pdf.getbuffer())
+
+        with st.spinner(f"Ingesting '{uploaded_pdf.name}'... This may take a while for large documents."):
+            ingest_pdf(temp_file_path, uploaded_pdf.name)
+        
+        st.success(f"Successfully added '{uploaded_pdf.name}' to your knowledge base!")
+        # Clean up the temporary file
+        os.remove(temp_file_path)
+
+
 # Check if the index exists. If not, offer to build it.
 if not check_if_indexed():
-    st.warning("Local knowledge base not found.")
+    st.warning("Local knowledge base not found. Please build it from the sidebar to enable recommendations.")
     if st.button("Build Local Knowledge Base"):
         document_files = ["healthy_maize_remedy.txt", "maize_phosphorus_deficiency_remedy.txt", "comic_relief.txt"]
         documents_content = []
@@ -45,14 +75,7 @@ audio_file = st.audio_input("Record your audio message")
 uploaded_image = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 # Save files if provided
-audio_path = None
 image_path = None
-
-if audio_file:
-    audio_path = "user_audio.wav"
-    with open(audio_path, "wb") as f:
-        f.write(audio_file.getbuffer())
-    st.audio(audio_file)
 
 if uploaded_image:
     image_path = "user_image.png"
@@ -76,7 +99,6 @@ if st.button("Run Model") and audio_path and image_path:
         formatted_prompt = apply_chat_template(
             processor, config, prompt,
             num_images=1,
-            num_audios=1
         )
 
         output = generate(
@@ -84,7 +106,6 @@ if st.button("Run Model") and audio_path and image_path:
             processor,
             formatted_prompt,
             image=[image_path],
-            audio=[audio_path],
             max_tokens=20,
             verbose=True
         )
@@ -104,22 +125,22 @@ if st.button("Run Model") and audio_path and image_path:
         st.write(output.text)
 
         query = output.text.strip()
-        search_results = secure_search(query)
+        search_results = secure_search(query, k=3)
 
         rag_text_for_display = None
         tts_text = query  # Default to VLM output if no remedy is found
 
         if search_results:
-            st.markdown("### Recommended Actions")
-            rag_text_for_display = search_results[0]['document']
-            
-            # For TTS, use the first two paragraphs as a summary.
-            paragraphs = rag_text_for_display.split('\n\n')
-            tts_text = "\n\n".join(paragraphs[:2])
-
-            st.markdown(rag_text_for_display)
+            for result in search_results:
+                st.markdown("### Recommended Actions")
+                if result['type'] == 'text':
+                    st.markdown(result['content'])
+                    st.caption(f"Source: Text from page {result['page']}")
+                elif result['type'] == 'image':
+                    st.image(result['content'], caption=f"Source: Image from page {result['page']}")
         else:
-            st.warning("No relevant information found.")
+            st.warning("No relevant information found in your local knowledge base.")
+
 
         # --- Memory Cleanup ---
         # Explicitly delete the large vision model and processor to free up
@@ -135,7 +156,8 @@ if st.button("Run Model") and audio_path and image_path:
         try:
             # Get the absolute path to the project directory for robust pathing
             project_root = os.path.dirname(os.path.abspath(__file__))
-            tts_env_python = os.path.join(project_root, "tts_service", ".venv_tts", "bin", "python")
+            # In the Docker container, the TTS virtual environment is at a fixed path.
+            tts_env_python = "/app/venv_tts/bin/python"
             tts_script = os.path.join(project_root, "tts_service", "run_tts_service.py")
 
             # IMPORTANT: Replace with the actual path to your downloaded model

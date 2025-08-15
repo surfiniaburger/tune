@@ -1,35 +1,54 @@
+# search.py
+
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import pickle
+from PIL import Image
+import io
 
-# Import our new modules
-from database import get_db_connection, INDEX_FILE
+from database import get_db_connection, INDEX_FILE, check_if_indexed
 from security import decrypt_data
 
-def search(query, model_name='all-MiniLM-L6-v2', k=1):
-    """Searches the FAISS index and retrieves the decrypted document."""
-    model = SentenceTransformer(model_name)
+MODEL_NAME = 'clip-ViT-B-32'
+
+def search(query, k=1):
+    """
+    Searches the multimodal FAISS index. The query can be text, and the result can be text or an image.
+    """
+    if not check_if_indexed():
+        return []
+
+    model = SentenceTransformer(MODEL_NAME)
     index = faiss.read_index(INDEX_FILE)
-    
-    query_embedding = model.encode([query], convert_to_tensor=False)
-    distances, indices = index.search(np.array(query_embedding, dtype=np.float32), k)
-    
+
+    # Create an embedding for the text query
+    query_embedding = model.encode([query]).astype('float32')
+    distances, indices = index.search(query_embedding, k)
+
     results = []
     conn = get_db_connection()
-    for i, doc_id in enumerate(indices[0]):
-        if doc_id != -1:
-            # FAISS gives us a 0-based index, which is 1 less than our 1-based SQL id
-            sql_id = int(doc_id) + 1
+    for i, faiss_id in enumerate(indices[0]):
+        if faiss_id != -1:
+            # The faiss_id is the row number, which corresponds to the chunk's primary key 'id'
+            sql_id = int(faiss_id) + 1
             
-            # Retrieve the encrypted chunk from SQLite
-            doc_record = conn.execute('SELECT encrypted_chunk FROM documents WHERE id = ?', (sql_id,)).fetchone()
+            chunk_record = conn.execute('SELECT * FROM chunks WHERE id = ?', (sql_id,)).fetchone()
             
-            if doc_record:
-                decrypted_chunk = decrypt_data(doc_record['encrypted_chunk']).decode('utf-8')
+            if chunk_record:
+                content_type = chunk_record['content_type']
+                decrypted_content_bytes = decrypt_data(chunk_record['encrypted_content'])
+                
+                # Prepare content based on its type
+                if content_type == 'text':
+                    content = decrypted_content_bytes.decode('utf-8')
+                elif content_type == 'image':
+                    content = Image.open(io.BytesIO(decrypted_content_bytes))
+                
                 results.append({
                     'distance': distances[0][i],
-                    'document': decrypted_chunk
+                    'content': content,
+                    'type': content_type,
+                    'page': chunk_record['page_num']
                 })
     conn.close()
     return results

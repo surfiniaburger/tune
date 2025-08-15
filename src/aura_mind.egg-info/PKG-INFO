@@ -18,8 +18,11 @@ Requires-Dist: tqdm
 Requires-Dist: transformers
 Requires-Dist: kaggle
 Requires-Dist: streamlit
+Requires-Dist: protobuf==3.20.3
+Requires-Dist: blinker==1.8.2
 Requires-Dist: gradio
 Requires-Dist: sentence-transformers
+Requires-Dist: PyMuPDF
 Requires-Dist: numba>=0.59.0
 Requires-Dist: llvmlite>=0.42.0
 Requires-Dist: faiss-cpu
