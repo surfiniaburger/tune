@@ -162,3 +162,13 @@ The application should now open in your web browser. You can upload an image of 
 python run_tts_service.py --text "Hello, this is a test." --model-path ../orpheus-3b-pidgin-voice-v1
 
 ## All updates are currently in the hugging face repo. https://huggingface.co/spaces/surfiniaburger/aura-mind-glow
+
+## Model Limitations and Known Issues
+
+During self-evaluation, the model exhibited the following behaviors and limitations:
+
+*   **Performance Discrepancy:** The model performs well on maize plant images collected under direct sunlight (the primary training data source). However, its performance significantly degrades when evaluated on academic datasets, primarily due to the inconsistent quality and blurriness of images in these datasets.
+
+*   **Misclassification of Phosphorus Deficiency:** The model consistently fails to identify "phosphorus deficiency." Instead, it frequently misclassifies this condition as "leaf spot" or other unrelated diseases. This suggests a potential lack of robust features for phosphorus deficiency in the training data or an overfitting to other, more prevalent conditions.
+
+These issues indicate a need for further data curation, augmentation, and potentially model retraining to improve generalization across diverse image conditions and accurate identification of all target diseases.
