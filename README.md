@@ -172,3 +172,5 @@ During self-evaluation, the model exhibited the following behaviors and limitati
 *   **Misclassification of Phosphorus Deficiency:** The model consistently fails to identify "phosphorus deficiency." Instead, it frequently misclassifies this condition as "leaf spot" or other unrelated diseases. This suggests a potential lack of robust features for phosphorus deficiency in the training data or an overfitting to other, more prevalent conditions.
 
 These issues indicate a need for further data curation, augmentation, and potentially model retraining to improve generalization across diverse image conditions and accurate identification of all target diseases.
+
+#### back to the training field
