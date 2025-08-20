@@ -45,21 +45,6 @@ After a relentless war against hardware errors and dependency hell, we finally a
 
 I unleashed a **Weights & Biases Bayesian Sweep**, an automated agent that would intelligently test five different combinations of hyperparameters on the smaller, efficient **Gemma 3n E2B** model. This was a rigorous, automated tournament to find a champion. To ensure the victory was real, each run was validated against a held-out set of images.
 
-The results were a stunning success. After implementing targeted prompt engineering, the pipeline produced multiple models that achieved **100% accuracy.**
-
-| Run Name          | Learning Rate | LoRA Rank (r) | Epochs | Final `train/loss` | **Validation Accuracy** |
-| :---------------- | :------------ | :------------ | :----- | :----------------- | :-------------------- |
-| **comic-sweep-1** | **8.34e-06**  | **16**        | **15** | **0.0003**         | **100%**              |
-| **stilted-sweep-2** | 1.57e-05      | 32            | 20     | 0.0001             | **100%**              |
-| **unique-sweep-3**| 1.16e-05      | 32            | 20     | 0.0001             | **100%**              |
-| **vague-sweep-4**   | 1.07e-04      | 32            | 20     | 0.0001             | **100%**              |
-| **amber-sweep-5**   | 4.45e-04      | 32            | 20     | 0.0001             | **100%**              |
-
-
-This was the proof. The data, the prompt, and the pipeline were all correct. I had a collection of perfect models. The next step seemed simple: prepare the champion model for the on-device conversion.
-
-This is where I hit the real wall. And in hitting it, I discovered the true genius of Gemma 3n.
-
 ---
 
 #### **The Final Hurdle: The Secret of the Nested Dolls**
@@ -174,3 +159,6 @@ During self-evaluation, the model exhibited the following behaviors and limitati
 These issues indicate a need for further data curation, augmentation, and potentially model retraining to improve generalization across diverse image conditions and accurate identification of all target diseases.
 
 #### back to the training field
+todo-consider multi-gpu-sweep
+--cloud-security
+--looker-studio
