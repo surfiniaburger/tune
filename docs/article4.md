@@ -37,36 +37,6 @@ This final page analyzes the ultimate question: is Aura Mind Glow actually helpi
 
 *   **Building Trust Through Localization:** A qualitative review of the `recommended_action` and `treatment_applied` fields highlights the importance of localized content. The use of familiar phrasing and remedies resonates with users, fostering the trust necessary for technology adoption. Studies on AI adoption consistently show that **trust is the primary determinant of user engagement**. By providing reliable diagnoses and culturally relevant recommendations, the Aura Mind Glow app is successfully building that trust.
 
-graph TD
-    subgraph "Phase 1: User Interaction & Authentication"
-        A[👤 Farmer/User] --> B{📱 Aura Mind Glow UI <br>(Gradio on HF Spaces)};
-        B -- Login/Signup Request --> C[🔥 Google Identity Platform <br>(Firebase Auth)];
-        C -- Returns --> D[🔑 Session Token <br>(UID, id_token)];
-        B -- Stores Session State --> D;
-    end
-
-    subgraph "Phase 2: Core AI Workflow (Field Mode)"
-        A -- Uploads Image & Feedback --> B;
-        B -- Sends Image --> E[🧠 Fine-Tuned Gemma 3n <br><strong>(Diagnosis Engine)</strong>];
-        E -- Generates --> F[🏷️ AI Diagnosis <br><em>'This is a Healthy Maize Plant.'</em>];
-        F -- Used as Search Query --> G[📚 BigQuery Knowledge Base <br><strong>(RAG - Retrieval)</strong>];
-        G -- Returns Relevant Document --> H[📝 Recommended Action <br><em>'Apply Bone Meal...'</em>];
-        H -- Formats & Displays --> B;
-    end
-
-    subgraph "Phase 3: Data Analytics & Improvement Loop"
-        B -- Packages All Data --> I[📦 Data Payload <br>(farmer_id, diagnosis, feedback, confidence, etc.)];
-        I -- Uploads to --> J[☁️ BigQuery Data Warehouse];
-        K[📊 Looker Studio Dashboard] -- Connects to & Visualizes --> J;
-        L[👩‍💻 Developer/Stakeholder] -- Analyzes & Gains Insights --> K;
-        L -- Uses Insights to --> M{🔄 Plan Next Iteration <br>(New Data, Model Retraining, App Features)};
-    end
-
-    style E fill:#d4edda,stroke:#155724
-    style G fill:#cce5ff,stroke:#004085
-    style J fill:#f8d7da,stroke:#721c24
-    style K fill:#fff3cd,stroke:#856404
-
 ### **Conclusion: A Successful Pilot and a Data-Driven Roadmap**
 
 The Aura Mind Glow dashboard, powered by live data from our pilot application, has validated our entire end-to-end strategy. It provides clear, quantitative evidence that we have successfully built and deployed a tool that is **accurate, trusted, and impactful.** More importantly, it has transformed our development process. We are no longer operating on assumptions; we have a direct, real-time feedback loop from the land. This data provides the precise, actionable insights needed to guide our next development sprint, ensuring that Aura Mind Glow continues to evolve into an indispensable tool for Nigerian farmers.
