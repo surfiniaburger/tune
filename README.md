@@ -160,5 +160,4 @@ These issues indicate a need for further data curation, augmentation, and potent
 
 #### back to the training field
 todo-consider multi-gpu-sweep
---cloud-security
---looker-studio
+--implement-vector-store-to-bigquery-ragflow
