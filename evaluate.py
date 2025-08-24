@@ -26,7 +26,7 @@ from tqdm import tqdm
 import re
 
 # --- 1. Configuration ---
-BASE_MODEL_NAME = "unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit"
+BASE_MODEL_NAME = "unsloth/gemma-3n-E4B-it-unsloth-bnb-4bit"
 CACHED_VAL_PATH = "data/cached_val_dataset_hf"
 CONFIG_PATH = "current_run_config.json"
 
