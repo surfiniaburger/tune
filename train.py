@@ -28,13 +28,15 @@ def load_run_config():
         return json.load(f)
 
 def main():
+
     run_config = load_run_config()
     run_name = run_config["run_name"]
     output_dir = f"outputs/{run_name}"
 
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     # The directory creation is handled by the main process inside opensloth
-
+    if os.environ.get('RANK') == '0':
+        os.makedirs(output_dir, exist_ok=True)
     # --- 2. Configure OpenSloth and Training Arguments for Multi-GPU ---
 
     # Multi-GPU Configuration
