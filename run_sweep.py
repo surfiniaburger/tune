@@ -73,6 +73,11 @@ def main():
             json.dump(run_params, f, indent=4)
 
         try:
+            # --- Create output directory on the main process ---
+            output_dir = f"outputs/{run_name}"
+            print(f"Ensuring output directory exists: {output_dir}")
+            os.makedirs(output_dir, exist_ok=True)
+            
             # --- CORRECTED TRAINING COMMAND ---
             # Call train.py directly. OpenSloth will handle the multi-GPU logic.
             run_command(["python", "train.py"])
