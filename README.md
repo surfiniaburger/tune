@@ -159,4 +159,4 @@ During self-evaluation, the model exhibited the following behaviors and limitati
 These issues indicate a need for further data curation, augmentation, and potentially model retraining to improve generalization across diverse image conditions and accurate identification of all target diseases.
 
 #### back to the training field
-todo-consider multi-gpu-sweep ---data augmentation
+todo-consider multi-gpu-sweep ---data augmentation --cloud-run
