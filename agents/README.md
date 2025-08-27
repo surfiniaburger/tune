@@ -43,7 +43,7 @@ This implementation is based on the architecture from the `galactic-streamhub` p
 1.  **Start the FastAPI Application:**
     Make sure you are in the main virtual environment (`source .venv/bin/activate`). Then, run the following command from the root of the project directory:
     ```bash
-    uv run uvicorn main:app --reload
+    uvicorn main:app --reload
     ```
     The server should start and be available at `http://127.0.0.1:8000`.
 
