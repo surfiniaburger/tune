@@ -53,7 +53,7 @@ def create_aura_mind_agent_system() -> SequentialAgent:
     # 1. Define the specialist agents
     diagnosis_agent = LlmAgent(
         name="DiagnosisAgent",
-        model="gemini-1.5-flash", # A small, fast model is sufficient for this
+        model="gemini-2.5-flash", # A small, fast model is sufficient for this
         instruction=DIAGNOSIS_AGENT_INSTRUCTION,
         tools=[diagnose_plant_from_huggingface],
         output_key="diagnosis_confirmation", # We store the main result in session state
@@ -62,7 +62,7 @@ def create_aura_mind_agent_system() -> SequentialAgent:
 
     tts_agent = LlmAgent(
         name="TtsAgent",
-        model="gemini-1.5-flash",
+        model="gemini-2.5-flash",
         instruction=TTS_AGENT_INSTRUCTION,
         tools=[generate_speech_from_text],
         output_key="tts_confirmation",
