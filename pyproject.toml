@@ -1,61 +1,14 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "aura-mind"
+name = "aura-mind-adk"
 version = "0.1.0"
-description = "An offline-first AI assistant for diagnosing crop diseases in Nigeria."
-authors = [{ name = "Adedoyinsola Ogungbesan", email = "jdmasciano2@gmail.com" }]
-
-requires-python = ">=3.11, <3.12" # Let's lock this in for stability
-
-# --- Core Dependencies for Running the Application ---
+description = "An ADK-based agent for Aura-Mind."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "mlx-vlm>=0.3.2",          # The key library for Vision-Language Models in MLX
-    "mlx>=0.28.0",
-    "mlx-lm>=0.26.3",
-    "mlx-metal>=0.28.0",
-    "cryptography",
-    "numpy",           # For numerical operations
-    "Pillow",          # For image loading and transformations
-    "huggingface-hub>=0.20.0", # To download models from the Hub
-    "filelock>=3.13.0", # To ensure compatibility with huggingface-hub
-    "datasets",        # To handle dataset loading and manipulation
-    "tqdm",            # For beautiful progress bars during long operations
-    "transformers",
-    "kaggle",
-    "streamlit",
-    "protobuf==3.20.3",
-    "blinker==1.8.2",
-    "gradio",
-    "sentence-transformers",
-    "PyMuPDF",
-
-    # --- VERSION OVERRIDES TO FIX INSTALLATION ---
-    "numba>=0.59.0",
-    "llvmlite>=0.42.0",
-    "faiss-cpu",
-    "sentence-transformers",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.29.0",
+    "google-adk>=1.6.0",
+    "python-dotenv>=1.0.1",
+    "gradio_client>=0.16.1",
+    "websockets>=12.0",
 ]
-
-# --- NEW SECTION TO ADD ---
-[tool.setuptools]
-packages = { find = { where = ["src"] } }
-# --------------------------
-
-# --- Optional Dependencies for Development ---
-[project.optional-dependencies]
-dev = [
-    "jupyterlab",      # For interactive notebooks to experiment
-    "ipykernel",       # To connect our virtual environment to Jupyter
-    "matplotlib",      # For plotting images and data
-    "ruff",            # A super-fast linter and code formatter
-    "pre-commit",      # To run checks before committing code
-]
-
-[tool.ruff]
-line-length = 88
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I"]
