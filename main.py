@@ -73,13 +73,15 @@ async def start_agent_session(session_id: str, image_path: str):
     live_request_queue.send_content(Content(parts=[Part(text="Start diagnosis.")]))
     live_request_queue.close() # Signal that no more requests will come
 
-    final_event = None
+    # The top-level agent is now a SequentialAgent. We just need to run it
+    # and wait for it to complete. The sub-agents will populate the session state.
     async for event in runner.run_live(session=session, live_request_queue=live_request_queue):
-        if event.turn_complete:
-            final_event = event
-            break
+        # We can log events here if needed, but we just need to wait for completion.
+        logging.info(f"Agent event: {event.summary}")
 
-    return final_event
+    # After the run is complete, the session state will be populated.
+    # We return the session object itself to access its state.
+    return session
 
 # --- WebSocket Communication Logic ---
 async def handle_websocket_connection(websocket: WebSocket):
@@ -111,17 +113,23 @@ async def handle_websocket_connection(websocket: WebSocket):
         # 3. Start the agent session and wait for the result
         await websocket.send_text(json.dumps({"status": "starting_diagnosis", "message": "Starting diagnosis... This may take a moment."}))
 
-        final_event = await start_agent_session(session_id, str(temp_image_path))
+        final_session = await start_agent_session(session_id, str(temp_image_path))
 
-        # 4. Send the final result back to the client
-        if final_event and final_event.content and final_event.content.parts:
-            final_response_text = final_event.content.parts[0].text
-            logging.info(f"Agent for session {session_id} finished with response: {final_response_text}")
-            # The agent is instructed to return a raw JSON string
-            await websocket.send_text(final_response_text)
+        # 4. The agent run is complete. Now we read the session state and format the response.
+        final_session_state = final_session.state
+        diagnosis = final_session_state.get("diagnosis_text", "No diagnosis found.")
+        audio_url = final_session_state.get("audio_path", None)
+
+        if not audio_url:
+            logging.error(f"Agent for session {session_id} did not produce an audio path.")
+            await websocket.send_text(json.dumps({"error": "Agent failed to produce an audio result."}))
         else:
-            logging.error(f"Agent for session {session_id} did not return a final response.")
-            await websocket.send_text(json.dumps({"error": "Agent failed to produce a result."}))
+            response_payload = {
+                "diagnosis": diagnosis,
+                "audio_url": audio_url
+            }
+            logging.info(f"Agent for session {session_id} finished. Sending payload: {response_payload}")
+            await websocket.send_text(json.dumps(response_payload))
 
     except WebSocketDisconnect:
         logging.info(f"Client #{session_id} disconnected.")
