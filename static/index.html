@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura-Mind ADK</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 40px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            border-left: 4px solid #1a73e8;
+            background-color: #e8f0fe;
+            border-radius: 4px;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #results h2 {
+            margin-top: 0;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #a0c3ff;
+            cursor: not-allowed;
+        }
+        #image-preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Aura-Mind ADK Proof-of-Concept</h1>
+        <p>Upload an image of a maize plant to get a diagnosis and a spoken remedy.</p>
+
+        <input type="file" id="image-input" accept="image/png, image/jpeg">
+        <br>
+        <img id="image-preview" src="" alt="Image preview" style="display:none;">
+        <br><br>
+        <button id="run-button" disabled>Diagnose Plant</button>
+
+        <div id="status">Awaiting image upload...</div>
+
+        <div id="results" style="display:none;">
+            <h2>Diagnosis</h2>
+            <p id="diagnosis-text"></p>
+            <h2>Spoken Remedy</h2>
+            <audio id="audio-player" controls></audio>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
