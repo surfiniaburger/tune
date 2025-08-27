@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.agents.sequential_agent import SequentialAgent
+from google.adk.models import GoogleLLM
 
 # Import the tools we created
 from tools.diagnosis_tool import diagnose_plant_from_huggingface
@@ -45,28 +46,27 @@ def create_aura_mind_agent_system() -> SequentialAgent:
     if not API_KEY:
         raise ValueError("GOOGLE_API_KEY must be set in your .env file.")
 
-    # Shared config for all LlmAgents to use the Google AI API Key
-    google_ai_config = {
-        "api_key": API_KEY,
-    }
+    # Create a single, configured LLM instance to be shared by all agents.
+    # This is the correct way to provide authentication.
+    llm_instance = GoogleLLM(api_key=API_KEY)
 
     # 1. Define the specialist agents
     diagnosis_agent = LlmAgent(
         name="DiagnosisAgent",
-        model="gemini-2.5-flash", # A small, fast model is sufficient for this
+        llm=llm_instance,
+        model="gemini-2.5-flash",
         instruction=DIAGNOSIS_AGENT_INSTRUCTION,
         tools=[diagnose_plant_from_huggingface],
         output_key="diagnosis_confirmation", # We store the main result in session state
-        **google_ai_config
     )
 
     tts_agent = LlmAgent(
         name="TtsAgent",
+        llm=llm_instance,
         model="gemini-2.5-flash",
         instruction=TTS_AGENT_INSTRUCTION,
         tools=[generate_speech_from_text],
         output_key="tts_confirmation",
-        **google_ai_config
     )
 
     # 2. Define the orchestrator (factory foreman)
@@ -76,5 +76,6 @@ def create_aura_mind_agent_system() -> SequentialAgent:
         description="Orchestrates the two-step process of diagnosing a plant image and generating speech for the result."
     )
 
+    # 3. The SequentialAgent is now the top-level agent.
     logging.info("Aura-Mind agent system created successfully.")
     return aura_mind_orchestrator_agent

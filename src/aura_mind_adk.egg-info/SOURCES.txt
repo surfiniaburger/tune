@@ -1,9 +1,0 @@
-README.md
-pyproject.toml
-src/aura_mind/__init__.py
-src/aura_mind/data_utils.py
-src/aura_mind_adk.egg-info/PKG-INFO
-src/aura_mind_adk.egg-info/SOURCES.txt
-src/aura_mind_adk.egg-info/dependency_links.txt
-src/aura_mind_adk.egg-info/requires.txt
-src/aura_mind_adk.egg-info/top_level.txt
