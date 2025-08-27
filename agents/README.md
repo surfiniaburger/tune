@@ -13,7 +13,15 @@ This implementation is based on the architecture from the `galactic-streamhub` p
 
 ## Setup & Installation
 
-1.  **Create and activate the main virtual environment:**
+1.  **Configure Environment Variables:**
+    The ADK agents require a Google AI API Key to function.
+    ```bash
+    # Copy the example .env file
+    cp .env.example .env
+    ```
+    Now, edit the `.env` file and add your Google AI API Key.
+
+2.  **Create and activate the main virtual environment:**
     From the root of the project directory:
     ```bash
     # Create the virtual environment
@@ -23,7 +31,7 @@ This implementation is based on the architecture from the `galactic-streamhub` p
     source .venv/bin/activate
     ```
 
-2.  **Install the required packages:**
+3.  **Install the required packages:**
     This will install `google-adk`, `fastapi`, `uvicorn`, `gradio_client`, etc., as defined in the root `pyproject.toml`.
     ```bash
     uv pip install -e .
