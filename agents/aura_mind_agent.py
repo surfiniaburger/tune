@@ -76,6 +76,5 @@ def create_aura_mind_agent_system() -> SequentialAgent:
         description="Orchestrates the two-step process of diagnosing a plant image and generating speech for the result."
     )
 
-    # 3. The SequentialAgent is now the top-level agent.
     logging.info("Aura-Mind agent system created successfully.")
     return aura_mind_orchestrator_agent
