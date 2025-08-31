@@ -57,3 +57,135 @@ This implementation is based on the architecture from the `galactic-streamhub` p
 3.  Click the "Diagnose Plant" button.
 4.  The status box will show the progress as the application connects to the server, sends the image, and waits for the agent to complete its work. This may take some time, especially if the Hugging Face Space is starting from a cold state.
 5.  Once complete, the diagnosis text will appear, and an audio player will be loaded with the spoken remedy.
+
+
+import logging
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.agents.sequential_agent import SequentialAgent
+
+# Import the tools we created
+from tools.diagnosis_tool import diagnose_plant_from_huggingface
+from tools.tts_tool import generate_speech_from_text
+
+# --- Agent Instructions ---
+
+DIAGNOSIS_AGENT_INSTRUCTION = """
+You are a specialist agent responsible for diagnosing plant health.
+Your ONLY job is to use the available tool to get a diagnosis for the image located at the following path.
+
+**Workflow:**
+1.  You **MUST** call the `diagnose_plant_from_huggingface` tool.
+2.  You **MUST** pass the following path to the tool's `image_path_on_server` argument: {image_path}
+3.  Your final output **MUST** be the exact text result returned by the tool. Do not add any other text.
+"""
+
+TTS_AGENT_INSTRUCTION = """
+You are a specialist agent responsible for converting text to speech.
+Your ONLY job is to use the available tool to generate audio from text.
+
+**Workflow:**
+1.  You will receive the diagnosis text as your direct input from the previous agent.
+2.  You **MUST** call the `generate_speech_from_text` tool with this text.
+3.  You **MUST** take the URL of the generated audio file returned by the tool and store it in the session state key `audio_path`.
+4.  Your final output should be the diagnosis text that you received as input, without any changes. This is so the final result contains both the text and the audio path (from the state).
+"""
+
+def create_aura_mind_agent_system() -> SequentialAgent:
+    """
+    Builds and returns the complete Aura-Mind agent system.
+    This version is simplified to be more robust and efficient by making the
+    SequentialAgent the top-level agent, removing the need for a RootAgent.
+    """
+    logging.info("Creating simplified Aura-Mind agent system...")
+
+    # 1. Define the specialist agents
+    # The ADK will automatically use the GOOGLE_API_KEY environment variable for authentication.
+    diagnosis_agent = LlmAgent(
+        name="DiagnosisAgent",
+        model="gemini-2.5-flash",
+        instruction=DIAGNOSIS_AGENT_INSTRUCTION,
+        tools=[diagnose_plant_from_huggingface],
+    )
+
+    tts_agent = LlmAgent(
+        name="TtsAgent",
+        model="gemini-2.5-flash",
+        instruction=TTS_AGENT_INSTRUCTION,
+        tools=[generate_speech_from_text],
+    )
+
+    # 2. Define the orchestrator which is now our top-level agent
+    aura_mind_orchestrator_agent = SequentialAgent(
+        name="AuraMindOrchestratorAgent",
+        sub_agents=[diagnosis_agent, tts_agent],
+        description="Orchestrates the two-step process of diagnosing a plant image and generating speech for the result."
+    )
+
+    logging.info("Aura-Mind agent system created successfully.")
+    return aura_mind_orchestrator_agent
+
+
+import logging
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.agents.sequential_agent import SequentialAgent
+
+# Import the tools we created
+from tools.diagnosis_tool import diagnose_plant_from_huggingface
+from tools.tts_tool import generate_speech_from_text
+
+# --- Agent Instructions ---
+
+DIAGNOSIS_AGENT_INSTRUCTION = """
+You are a specialist agent responsible for diagnosing plant health.
+Your ONLY job is to use the available tool to get a diagnosis for an image.
+
+**Workflow:**
+1.  You will receive the path to an image in the session state key `image_path`.
+2.  You **MUST** call the `diagnose_plant_from_huggingface` tool with this image path.
+3.  Your final output **MUST** be the exact text result returned by the tool. Do not add any other text.
+"""
+
+TTS_AGENT_INSTRUCTION = """
+You are a specialist agent responsible for converting text to speech.
+Your ONLY job is to use the available tool to generate audio from text.
+
+**Workflow:**
+1.  You will receive the diagnosis text as your direct input from the previous agent.
+2.  You **MUST** call the `generate_speech_from_text` tool with this text.
+3.  You **MUST** take the URL of the generated audio file returned by the tool and store it in the session state key `audio_path`.
+4.  Your final output should be the diagnosis text that you received as input, without any changes. This is so the final result contains both the text and the audio path (from the state).
+"""
+
+def create_aura_mind_agent_system() -> SequentialAgent:
+    """
+    Builds and returns the complete Aura-Mind agent system.
+    This version is simplified to be more robust and efficient by making the
+    SequentialAgent the top-level agent, removing the need for a RootAgent.
+    """
+    logging.info("Creating simplified Aura-Mind agent system...")
+
+    # 1. Define the specialist agents
+    # The ADK will automatically use the GOOGLE_API_KEY environment variable for authentication.
+    diagnosis_agent = LlmAgent(
+        name="DiagnosisAgent",
+        model="gemini-2.5-flash",
+        instruction=DIAGNOSIS_AGENT_INSTRUCTION,
+        tools=[diagnose_plant_from_huggingface],
+    )
+
+    tts_agent = LlmAgent(
+        name="TtsAgent",
+        model="gemini-2.5-flash",
+        instruction=TTS_AGENT_INSTRUCTION,
+        tools=[generate_speech_from_text],
+    )
+
+    # 2. Define the orchestrator which is now our top-level agent
+    aura_mind_orchestrator_agent = SequentialAgent(
+        name="AuraMindOrchestratorAgent",
+        sub_agents=[diagnosis_agent, tts_agent],
+        description="Orchestrates the two-step process of diagnosing a plant image and generating speech for the result."
+    )
+
+    logging.info("Aura-Mind agent system created successfully.")
+    return aura_mind_orchestrator_agent

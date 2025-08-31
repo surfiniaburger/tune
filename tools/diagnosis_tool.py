@@ -1,12 +1,13 @@
 import os
 import time
 import logging
-from gradio_client import Client, file
+import asyncio
+from gradio_client import Client, handle_file
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def diagnose_plant_from_huggingface(image_path_on_server: str) -> str | None:
+async def diagnose_plant_from_huggingface(image_path_on_server: str) -> str | None:
     """
     Connects to the Hugging Face Gradio server, sends an image,
     and gets back a diagnosis. Includes a retry mechanism for cold starts.
@@ -18,58 +19,51 @@ def diagnose_plant_from_huggingface(image_path_on_server: str) -> str | None:
         The diagnosis text from the server, or None if an error occurs.
     """
     # --- Configuration for the retry mechanism ---
-    MAX_RETRIES = 3
-    # Delay between retries in seconds. Hugging Face spaces can take a minute to wake up.
-    RETRY_DELAY_SECONDS = 45
+    MAX_RETRIES = 5
+    RETRY_DELAY_SECONDS = 120
     HF_SPACE_URL = "https://surfiniaburger-aura-mind-glow.hf.space/"
 
-    logging.info(f"Connecting to Hugging Face Space: {HF_SPACE_URL}")
-    try:
-        # 1. Connect to your public Hugging Face Space
-        client = Client(HF_SPACE_URL)
-        logging.info("Connection to Hugging Face Space successful.")
-    except Exception as e:
-        logging.error(f"Fatal: Could not connect to the Gradio client. {e}", exc_info=True)
-        return "Error: Could not connect to the diagnosis service."
+    def blocking_gradio_call():
+        """This inner function contains the blocking I/O code."""
+        for attempt in range(MAX_RETRIES):
+            try:
+                logging.info(f"--- Attempt {attempt + 1} of {MAX_RETRIES} ---")
+                logging.info(f"Connecting to Hugging Face Space: {HF_SPACE_URL}")
+                
+                client = Client(HF_SPACE_URL)
+                
+                logging.info("Connection successful. Sending image for diagnosis...")
+                logging.info(f"Sending {image_path_on_server} for diagnosis...")
+                
+                result = client.predict(
+                    uploaded_image=handle_file(image_path_on_server),
+                    feedback="Automated diagnosis from ADK Agent",
+                    api_name="/get_diagnosis_and_remedy"
+                )
 
-    # 2. Loop for retry attempts
-    for attempt in range(MAX_RETRIES):
-        try:
-            logging.info(f"--- Attempt {attempt + 1} of {MAX_RETRIES} ---")
-            logging.info(f"Sending {image_path_on_server} for diagnosis...")
+                logging.info("✅ Diagnosis received successfully!")
+                logging.info(f"Result from server: {result}")
+                
+                if isinstance(result, (list, tuple)) and len(result) > 0:
+                    diagnosis_text = result[0]
+                elif isinstance(result, str):
+                    diagnosis_text = result
+                else:
+                    diagnosis_text = str(result)
 
-            # 3. Call the specific function (tool) on the server.
-            # The client.predict method signature depends on the Gradio app's API.
-            # We are calling the endpoint named "/get_diagnosis_and_remedy".
-            result = client.predict(
-                uploaded_image=file(image_path_on_server),
-                feedback="Automated diagnosis from ADK Agent", # Example feedback
-                api_name="/get_diagnosis_and_remedy"
-            )
+                return diagnosis_text
 
-            logging.info("✅ Diagnosis received successfully!")
-            logging.info(f"Result from server: {result}")
-
-            # The result might be a complex object. We need to extract the text.
-            # Based on Gradio's behavior, the result is often a tuple or a dictionary.
-            # Let's assume the diagnosis text is the primary, first element.
-            if isinstance(result, (list, tuple)) and len(result) > 0:
-                diagnosis_text = result[0]
-            elif isinstance(result, str):
-                diagnosis_text = result
-            else:
-                 diagnosis_text = str(result)
-
-            return diagnosis_text
-
-        except Exception as e:
-            logging.error(f"Attempt {attempt + 1} failed. Error: {e}", exc_info=True)
-            if attempt < MAX_RETRIES - 1:
-                logging.warning(f"Server may be experiencing a cold start. Retrying in {RETRY_DELAY_SECONDS} seconds...")
-                time.sleep(RETRY_DELAY_SECONDS)
-            else:
-                logging.error("All retry attempts have failed. The server might be unavailable or has an error.")
-                return "Error: The diagnosis service is currently unavailable after multiple retries."
+            except Exception as e:
+                logging.error(f"Attempt {attempt + 1} failed. Error: {e}", exc_info=True)
+                if attempt < MAX_RETRIES - 1:
+                    logging.warning(f"Server may be experiencing a cold start. Retrying in {RETRY_DELAY_SECONDS} seconds...")
+                    time.sleep(RETRY_DELAY_SECONDS)
+                else:
+                    logging.error("All retry attempts have failed.")
+                    return "Error: The diagnosis service is currently unavailable after multiple retries."
+    
+    # Run the blocking function in a separate thread to avoid blocking the main asyncio event loop.
+    return await asyncio.to_thread(blocking_gradio_call)
 
 if __name__ == '__main__':
     # This is a placeholder for a real image file path
@@ -86,7 +80,7 @@ if __name__ == '__main__':
         dummy_image = Image.new('RGB', (100, 100), color = 'green')
         dummy_image.save(example_image_path)
 
-    diagnosis = diagnose_plant_from_huggingface(example_image_path)
+    diagnosis = asyncio.run(diagnose_plant_from_huggingface(example_image_path))
     if diagnosis:
         print("\n--- Diagnosis ---")
         print(diagnosis)

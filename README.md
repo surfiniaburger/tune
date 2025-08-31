@@ -146,7 +146,8 @@ The application should now open in your web browser. You can upload an image of 
 
 python run_tts_service.py --text "Hello, this is a test." --model-path ../orpheus-3b-pidgin-voice-v1
 
-## All updates are currently in the hugging face repo. https://huggingface.co/spaces/surfiniaburger/aura-mind-glow
+### All updates are currently in the hugging face repo. https://huggingface.co/spaces/surfiniaburger/aura-mind-glow
+### Connected mode can found here https://github.com/surfiniaburger/galactic-streamhub
 
 ## Model Limitations and Known Issues
 
@@ -159,4 +160,4 @@ During self-evaluation, the model exhibited the following behaviors and limitati
 These issues indicate a need for further data curation, augmentation, and potentially model retraining to improve generalization across diverse image conditions and accurate identification of all target diseases.
 
 #### back to the training field
-todo-consider multi-gpu-sweep ---data augmentation --cloud-run
+todo-consider multi-gpu-sweep-grpo
