@@ -159,4 +159,30 @@ sweep_config = [
         "lora_dropout": 0.1,
         "weight_decay": 0.01,
     },
+
+    # --- Run 13: Low Alpha (r=16, alpha=1) ---
+    # Tests the hypothesis that a very subtle update is superior.
+    {
+        "run_name": "run_13_low_alpha_r16",
+        "learning_rate": 2e-5,
+        "num_train_epochs": 2,
+        "per_device_train_batch_size": 2,
+        "lora_r": 16,
+        "lora_alpha": 1,  # The key change
+        "lora_dropout": 0.05,
+        "weight_decay": 0.01,
+    },
+    # --- Run 14: Low Alpha (r=32, alpha=1) ---
+    # An even more subtle update, as the scaling factor (1/32) is smaller.
+    {
+        "run_name": "run_14_low_alpha_r32",
+        "learning_rate": 2e-5,
+        "num_train_epochs": 2,
+        "per_device_train_batch_size": 2,
+        "lora_r": 32,
+        "lora_alpha": 1,  # The key change
+        "lora_dropout": 0.05,
+        "weight_decay": 0.01,
+    },
+
 ]
