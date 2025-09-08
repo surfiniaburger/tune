@@ -1,12 +1,16 @@
+
 """
 ==============================================================================
-CACHE_DATASETS.PY (v8 - FINAL Augmentation API)
+CACHE_DATASETS.PY (v9 - Conditional Labeling for Training vs. Eval)
 ==============================================================================
 This script now uses a Python generator with `Dataset.from_generator` and
 integrates a robust `albumentations` pipeline for the training set.
 
-v8 FIXES:
-- Simplified the CoarseDropout call to match the modern API and resolve warnings.
+v9 FIXES:
+- Solves the `NaN` training loss by excluding the `labels` column for the
+  training set, forcing the trainer to use standard next-token prediction.
+- Conditionally INCLUDES the `labels` column ONLY for the validation set,
+  ensuring that the evaluation script has the ground truth data it needs.
 """
 
 import os
@@ -27,7 +31,16 @@ LOCAL_DATA_PATH = Path("/kaggle/working/local_datasets/")
 SOURCE_DATA_PATHS = { "train": "/kaggle/input/maize-dataset/", "validation": "/kaggle/input/aura-mind-maize-validation/", }
 LOCAL_PATHS = { "train": LOCAL_DATA_PATH / "train", "validation": LOCAL_DATA_PATH / "validation", }
 CACHED_PATHS = { "train": "data/cached_train_dataset_hf_augmented", "validation": "data/cached_val_dataset_hf", }
-CLASS_NAME_MAPPING = { "maize_healthy": "Healthy Maize Plant", "phosphorus_deficiency": "Maize Phosphorus Deficiency", }
+CLASS_NAME_MAPPING = {
+    "maize_healthy": "Healthy Maize Plant",
+    "phosphorus_deficiency": "Maize Phosphorus Deficiency",
+}
+CLASS_ID_MAPPING = {
+    "maize_healthy": 0,
+    "phosphorus_deficiency": 1,
+}
+
+
 
 # --- 2. Data Copying Function ---
 def copy_data_if_needed(dataset_type: str):
@@ -44,17 +57,42 @@ def create_conversation_dict(image_path, class_name):
         return { "messages": [ { "role": "user", "content": [ {"type": "text", "text": "Classify the condition of this maize plant. Choose from: Healthy Maize Plant, Maize Phosphorus Deficiency."}, {"type": "image", "image": Image.open(image_path).convert("RGB")} ] }, { "role": "assistant", "content": [ {"type": "text", "text": f"This is a {display_name}."} ] }, ] }
     except Exception as e: print(f"Warning: Could not process image {image_path}. Error: {e}"); return None
 
-def sample_generator(image_paths, processor, augmentations=None):
+# MODIFIED: Added `dataset_type` to conditionally add labels
+def sample_generator(image_paths, processor, dataset_type, augmentations=None):
     for path in tqdm(image_paths, desc="Processing samples"):
-        raw_sample = create_conversation_dict(path, path.parent.name)
-        if raw_sample is None: continue
+        class_name = path.parent.name
+        raw_sample = create_conversation_dict(path, class_name)
+        if raw_sample is None:
+            continue
+
         pil_image = raw_sample["messages"][0]['content'][1]['image']
         image_to_process = np.array(pil_image)
-        if augmentations: image_to_process = augmentations(image=image_to_process)['image']
-        text = processor.tokenizer.apply_chat_template(raw_sample["messages"], tokenize=False, add_generation_prompt=False)
+        if augmentations:
+            image_to_process = augmentations(image=image_to_process)['image']
+
+        text = processor.tokenizer.apply_chat_template(
+            raw_sample["messages"], tokenize=False, add_generation_prompt=False
+        )
         text_inputs = processor.tokenizer(text, padding=False, truncation=True, return_tensors="pt")
         image_inputs = processor.image_processor(images=[image_to_process], return_tensors="pt")
-        yield { "input_ids": text_inputs.input_ids.squeeze(), "attention_mask": text_inputs.attention_mask.squeeze(), "pixel_values": image_inputs.pixel_values.squeeze(), }
+
+        # Base sample dictionary without labels
+        sample_output = {
+            "input_ids": text_inputs.input_ids.squeeze(),
+            "attention_mask": text_inputs.attention_mask.squeeze(),
+            "pixel_values": image_inputs.pixel_values.squeeze(),
+        }
+        
+        # *** THE FIX ***
+        # Only add the `labels` column for the validation set.
+        # This prevents the trainer from seeing it and causing a NaN loss,
+        # but allows the evaluation script to use it for scoring.
+        if dataset_type == 'validation':
+            label_id = CLASS_ID_MAPPING.get(class_name, -1)
+            sample_output["labels"] = [label_id]
+
+        yield sample_output
+
 
 def process_and_cache_dataset(dataset_type: str):
     image_dir, cache_path = LOCAL_PATHS[dataset_type], CACHED_PATHS[dataset_type]
@@ -67,6 +105,7 @@ def process_and_cache_dataset(dataset_type: str):
     augmentations = None
     if dataset_type == 'train':
         print("Defining ROBUST augmentation pipeline for training data...")
+        # Restored augmentations
         augmentations = A.Compose([
             A.HorizontalFlip(p=0.5), A.Rotate(limit=25, p=0.4),
             A.Affine(scale=(0.9, 1.1), translate_percent=(-0.0625, 0.0625), rotate=(-20, 20), p=0.3),
@@ -74,12 +113,21 @@ def process_and_cache_dataset(dataset_type: str):
             A.GaussNoise(p=0.2), A.ISONoise(intensity=(0.1, 0.5), p=0.1),
             A.Sharpen(p=0.2), A.CLAHE(p=0.3), A.Equalize(p=0.2),
             A.ColorJitter(p=0.4), A.Posterize(p=0.1), A.Solarize(p=0.1),
-            # FINAL FIX: Simplified CoarseDropout call to remove invalid arguments.
             A.CoarseDropout(p=0.2),
         ])
         print("✅ Augmentation pipeline created successfully.")
+        
     print("Creating dataset from generator...")
-    processed_dataset = Dataset.from_generator(sample_generator, gen_kwargs={"image_paths": image_paths, "processor": processor, "augmentations": augmentations})
+    # MODIFIED: Pass `dataset_type` to the generator's arguments
+    processed_dataset = Dataset.from_generator(
+        sample_generator,
+        gen_kwargs={
+            "image_paths": image_paths,
+            "processor": processor,
+            "dataset_type": dataset_type, # <-- Pass the context here
+            "augmentations": augmentations,
+        }
+    )
     os.makedirs(cache_path, exist_ok=True)
     print(f"Saving processed dataset to directory: {cache_path}")
     processed_dataset.save_to_disk(cache_path)

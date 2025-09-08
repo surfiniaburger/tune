@@ -61,7 +61,7 @@ I pivoted my entire deployment strategy to a novel **"fine-tune then slice"** wo
 This multi-stage process, moving from a small model sweep to a large model sweep and then to a final architectural slice, was a complete success. I successfully created a final, standalone E2B model that was both **efficiently sized for on-device use** and **contained the 100% accurate expert knowledge** from our fine-tuning process.
 
 ---
-
+     
 ## Where We Are Now: A Proven Model at the Final Frontier
 
 Today, the entire journey has culminated in a single, powerful artifact: **`AuraMind-Maize-Expert-E2B-Finetuned`**.

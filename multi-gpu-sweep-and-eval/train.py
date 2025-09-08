@@ -22,14 +22,6 @@ os.environ["UNSLOTH_DISABLE_FUSED_LOSS"] = "1"
 os.environ["TORCH_COMPILE_DISABLE"] = "1"  # extra safety
 
 import json
-import torch
-from opensloth.opensloth_config import (
-    FastModelArgs,
-    LoraArgs,
-    OpenSlothConfig,
-    TrainingArguments,
-)
-from opensloth.scripts.opensloth_sft_trainer import run_mp_training, setup_envs
 
 # --- 1. Load Configuration for the Current Run ---
 def load_run_config():
@@ -40,9 +32,23 @@ def load_run_config():
         print(f"Loading configuration from {config_path}")
         return json.load(f)
 
+run_config = load_run_config()
+run_name = run_config["run_name"]
+output_dir = f"outputs/{run_name}"
+os.makedirs(output_dir, exist_ok=True)
+
+import torch
+from opensloth.opensloth_config import (
+    FastModelArgs,
+    LoraArgs,
+    OpenSlothConfig,
+    TrainingArguments,
+)
+from opensloth.scripts.opensloth_sft_trainer import run_mp_training, setup_envs
+
+
+
 def main():
-    run_config = load_run_config()
-    run_name = run_config["run_name"]
 
     # --- 2. Configure OpenSloth and Training Arguments for Multi-GPU ---
     DEVICES, GLOBAL_BZ, BZ = [0, 1], 16, run_config["per_device_train_batch_size"]
@@ -65,13 +71,13 @@ def main():
             r=run_config["lora_r"], lora_alpha=run_config["lora_alpha"],
             target_modules=[ "q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj", ],
             lora_dropout=run_config["lora_dropout"], bias="none", use_rslora=False,
-            finetune_vision_layers=False, finetune_language_layers=True,
+            finetune_vision_layers=True, finetune_language_layers=True,
         ),
         sequence_packing=False,
-    )
+    )        
 
     training_config = TrainingArguments(
-        output_dir="outputs/vision_multiGPU_experiment",
+        output_dir= output_dir,
         per_device_train_batch_size=BZ, gradient_accumulation_steps=GRAD_ACCUM,
         learning_rate=run_config["learning_rate"], num_train_epochs=run_config["num_train_epochs"],
         weight_decay=run_config["weight_decay"], logging_steps=10, lr_scheduler_type="linear",
